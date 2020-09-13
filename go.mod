@@ -1,4 +1,4 @@
-module github.com/soerenkoehler/chdiff
+module github.com/soerenkoehler/chdiff-go
 
 go 1.15
 

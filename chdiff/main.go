@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/docopt/docopt-go"
-	"github.com/soerenkoehler/chdiff/other"
+	"github.com/soerenkoehler/chdiff-go/other"
 )
 
 const _Version = "ChecksumDiff 0.9"
