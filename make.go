@@ -1,34 +1,83 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path"
 )
 
-var pathCWD, _ = os.Getwd()
-var envGOBIN = fmt.Sprintf("GOBIN=%s", path.Join(pathCWD, "bin"))
-var cmdINSTALL = []string{"go", "install", "github.com/soerenkoehler/chdiff-go/chdiff"}
-
 func main() {
-	execute(cmdINSTALL, envGOBIN)
+	if test() == nil {
+		build("windows", "amd64")
+		build("linux", "amd64")
+		build("linux", "arm")
+		build("linux", "arm64")
+	}
 }
 
-func execute(cmdline []string, env ...string) {
+func test() error {
+	return execute(
+		[]string{"go", "test", "./..."})
+}
+
+func build(targetOs string, targetArch string) error {
+	targetDir := path.Join("bin", fmt.Sprintf("%s-%s", targetOs, targetArch))
+	os.MkdirAll(targetDir, 0777)
+
+	targetDef := []string{
+		fmt.Sprintf("GOOS=%s", targetOs),
+		fmt.Sprintf("GOARCH=%s", targetArch)}
+	if targetArch == "arm" {
+		targetDef = append(targetDef, "GOARM=7")
+	}
+
+	return execute(
+		[]string{
+			"go",
+			"build",
+			"-a",
+			"-o",
+			targetDir,
+			"github.com/soerenkoehler/chdiff-go/chdiff"},
+		targetDef...)
+}
+
+func execute(cmdline []string, env ...string) error {
+	fmt.Println(cmdline, env)
+
 	proc := exec.Command(cmdline[0], cmdline[1:]...)
-
 	proc.Env = append(os.Environ(), env...)
-	stdout, _ := proc.StdoutPipe()
-	stderr, _ := proc.StderrPipe()
+	pipeOut, _ := proc.StdoutPipe()
+	pipeErr, _ := proc.StderrPipe()
 
-	proc.Start()
-	stdoutContent, _ := ioutil.ReadAll(stdout)
-	stderrContent, _ := ioutil.ReadAll(stderr)
+	output := make(chan string)
+	defer close(output)
 
-	if err := proc.Wait(); err != nil {
+	go copyOutput(pipeOut, output)
+	go copyOutput(pipeErr, output)
+	go printOutput(output)
+
+	err := proc.Run()
+
+	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 	}
-	fmt.Printf("%s%s", stdoutContent, stderrContent)
+
+	return err
+}
+
+func copyOutput(src io.Reader, dest chan<- string) {
+	scanner := bufio.NewScanner(src)
+	for scanner.Scan() {
+		dest <- scanner.Text()
+	}
+}
+
+func printOutput(src <-chan string) {
+	for line := range src {
+		fmt.Println(line)
+	}
 }
