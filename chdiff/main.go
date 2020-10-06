@@ -12,8 +12,8 @@ const _Version = "ChecksumDiff 0.9"
 const _Usage = _Version + `
 
 Usage:
-    chdiff c PATH
-    chdiff v PATH
+    chdiff c PATH [-f FILE]
+    chdiff v PATH [-f FILE]
     chdiff (-h | --help | --version)
 
 Commands:
@@ -21,6 +21,7 @@ Commands:
     v  Verify checksum file in directory PATH.
 
 Options:
+	-f FILE    Use the given snapshot file.
     -h --help  Show help.
     --version  Show version.`
 
