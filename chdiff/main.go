@@ -8,8 +8,8 @@ import (
 	"github.com/soerenkoehler/chdiff-go/other"
 )
 
-const _Version = "ChecksumDiff 0.9"
-const _Usage = _Version + `
+var _Version = "DEV"
+var _Usage = "ChecksumDiff (build " + _Version + `)
 
 Usage:
     chdiff c PATH [-f FILE]
