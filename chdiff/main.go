@@ -6,33 +6,33 @@ import (
 
 	"github.com/docopt/docopt-go"
 	"github.com/soerenkoehler/chdiff-go/other"
+	"github.com/soerenkoehler/chdiff-go/resource"
+	"github.com/soerenkoehler/chdiff-go/util"
 )
 
 var _Version = "DEV"
-var _Usage = "ChecksumDiff (build " + _Version + `)
-
-Usage:
-    chdiff c PATH [-f FILE]
-    chdiff v PATH [-f FILE]
-    chdiff (-h | --help | --version)
-
-Commands:
-    c  Create checksum file in directory PATH.
-    v  Verify checksum file in directory PATH.
-
-Options:
-	-f FILE    Use the given snapshot file.
-    -h --help  Show help.
-    --version  Show version.`
 
 func main() {
-	opts, err := docopt.ParseArgs(_Usage, nil, _Version)
+	if errors := doMain(); len(errors) > 0 {
+		for _, e := range errors {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+		}
+		os.Exit(1)
+	}
+}
+
+func doMain() []error {
+	opts, err := docopt.ParseArgs(
+		util.ReplaceVariable(
+			resource.Usage,
+			"VERSION",
+			_Version),
+		nil,
+		_Version)
 	if err == nil {
 		other.Func(normalizeOpts(opts))
-	} else {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(127)
 	}
+	return []error{err}
 }
 
 // TODO
