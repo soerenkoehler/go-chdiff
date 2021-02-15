@@ -4,8 +4,7 @@ package resource
 const Usage = `ChecksumDiff (build ${VERSION})
 
 Usage:
-    chdiff c PATH [-f FILE] [-m MODE]
-    chdiff v PATH [-f FILE] [-m MODE]
+    chdiff (c|v) [PATH] [-f FILE] [-m MODE]
     chdiff (-h | --help | --version)
 
 Commands:
