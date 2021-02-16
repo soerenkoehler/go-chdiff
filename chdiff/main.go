@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/docopt/docopt-go"
-	"github.com/soerenkoehler/chdiff-go/other"
+	"github.com/soerenkoehler/chdiff-go/digest"
 	"github.com/soerenkoehler/chdiff-go/resource"
 	"github.com/soerenkoehler/chdiff-go/util"
 )
@@ -30,12 +30,46 @@ func doMain() []error {
 		nil,
 		_Version)
 	if err == nil {
-		other.Func(normalizeOpts(opts))
+		return processOpts(opts)
 	}
 	return []error{err}
 }
 
-// TODO
-func normalizeOpts(opts docopt.Opts) docopt.Opts {
-	return opts
+func processOpts(opts docopt.Opts) []error {
+	fmt.Println(opts)
+	mode, err := opts.String("MODE")
+
+	if err != nil {
+		return []error{err}
+	}
+
+	switch {
+
+	case opts["c"]:
+		return digest.Create(getPath(opts), "out.txt", mode)
+
+	case opts["v"]:
+		return digest.Verify(getPath(opts), "out.txt", mode)
+
+	default:
+		fmt.Println("Using default: chdiff v .")
+		return digest.Verify(getPath(opts), "out.txt", mode)
+
+	}
+}
+
+// func hasOption(options docopt.Opts, name string) bool {
+// 	result, err := options.Bool(name)
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "Checking Option: %v\nError: %v\n", name, err)
+// 	}
+// 	return result
+// }
+
+func getPath(options docopt.Opts) string {
+	result, err := options.String("PATH")
+	if err == nil {
+		return result
+	}
+	return "."
 }
