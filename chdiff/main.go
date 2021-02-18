@@ -4,13 +4,21 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/docopt/docopt-go"
+	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/chdiff-go/digest"
-	"github.com/soerenkoehler/chdiff-go/resource"
-	"github.com/soerenkoehler/chdiff-go/util"
 )
 
 var _Version = "DEV"
+
+var cli struct {
+	Create cmdDigest `cmd:"" name:"create" aliases:"c" help:"Create digest file for PATH"`
+	Verify cmdDigest `cmd:"" name:"verify" aliases:"v" default:"1" help:"Verify digest file for PATH"`
+	Mode   string    `name:"mode" short:"m" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
+}
+
+type cmdDigest struct {
+	Path string `arg:"" name:"PATH" type:"path" default:"X" help:"Path for which to calculate the digest"`
+}
 
 func main() {
 	if errors := doMain(); len(errors) > 0 {
@@ -22,54 +30,17 @@ func main() {
 }
 
 func doMain() []error {
-	opts, err := docopt.ParseArgs(
-		util.ReplaceVariable(
-			resource.Usage,
-			"VERSION",
-			_Version),
-		nil,
-		_Version)
-	if err == nil {
-		return processOpts(opts)
-	}
-	return []error{err}
-}
+	ctx := kong.Parse(&cli, kong.UsageOnError(), kong.Description("TODO: Description"))
 
-func processOpts(opts docopt.Opts) []error {
-	fmt.Println(opts)
-	mode, err := opts.String("MODE")
+	switch ctx.Command() {
 
-	if err != nil {
-		return []error{err}
-	}
+	case "create", "create <PATH>":
+		return digest.Create(cli.Create.Path, "out.txt", cli.Mode)
 
-	switch {
-
-	case opts["c"]:
-		return digest.Create(getPath(opts), "out.txt", mode)
-
-	case opts["v"]:
-		return digest.Verify(getPath(opts), "out.txt", mode)
+	case "verify", "verify <PATH>":
+		return digest.Verify(cli.Verify.Path, "out.txt", cli.Mode)
 
 	default:
-		fmt.Println("Using default: chdiff v .")
-		return digest.Verify(getPath(opts), "out.txt", mode)
-
+		panic(ctx.Command())
 	}
-}
-
-// func hasOption(options docopt.Opts, name string) bool {
-// 	result, err := options.Bool(name)
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "Checking Option: %v\nError: %v\n", name, err)
-// 	}
-// 	return result
-// }
-
-func getPath(options docopt.Opts) string {
-	result, err := options.String("PATH")
-	if err == nil {
-		return result
-	}
-	return "."
 }
