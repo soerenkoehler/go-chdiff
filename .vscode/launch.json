@@ -10,10 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/chdiff",
-            "args": [
-                "c",
-                "testpath"
-            ]
+            "args": []
         }
     ]
 }
