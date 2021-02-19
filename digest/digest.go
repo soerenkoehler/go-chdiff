@@ -37,51 +37,43 @@ func calculate(rootPath, mode string) (Digest, util.ErrorList) {
 	errors := util.ErrorList{}
 
 	wait := sync.WaitGroup{}
-	pathes := make(chan string)
 
-	addPath := func(path string) {
+	var processPath, processDir, processFile func(string)
+
+	// TODO skip symbolic links
+	processPath = func(path string) {
 		wait.Add(1)
 		go func() {
-			pathes <- path
+			info, err := os.Stat(path)
+			if err != nil {
+				errors = append(errors, err)
+			} else {
+				if info.IsDir() {
+					processDir(path)
+				} else {
+					processFile(path)
+				}
+			}
+			wait.Done()
 		}()
 	}
 
-	processDir := func(dirPath string) {
+	processDir = func(dirPath string) {
 		entries, err := os.ReadDir(dirPath)
 		if err != nil {
 			errors = append(errors, err)
 		}
 		for _, entry := range entries {
-			addPath(path.Join(dirPath, entry.Name()))
+			processPath(path.Join(dirPath, entry.Name()))
 		}
 	}
 
-	processFile := func(filePath string) {
-		fmt.Printf("calculate(%s, %s)\n", mode, filePath)
+	processFile = func(path string) {
+		fmt.Printf("calculate(%s, %s)\n", mode, path)
 	}
 
-	go func() {
-		for {
-			if currentPath, ok := <-pathes; ok {
-				info, err := os.Stat(currentPath)
-				if err != nil {
-					errors = append(errors, err)
-				}
-				if info.IsDir() {
-					processDir(currentPath)
-				} else {
-					processFile(currentPath)
-				}
-				wait.Done()
-			} else {
-				return
-			}
-		}
-	}()
-
-	addPath(rootPath)
+	processPath(rootPath)
 	wait.Wait()
-	close(pathes)
 
 	return Digest{}, errors
 }
