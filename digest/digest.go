@@ -39,7 +39,6 @@ func calculate(rootPath, mode string) (Digest, error) {
 
 	var processPath, processDir, processFile func(string)
 
-	// TODO skip symbolic links
 	processPath = func(path string) {
 		wait.Add(1)
 		go func() {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 
@@ -10,13 +11,12 @@ import (
 
 var _Version = "DEV"
 
-var cli struct {
-	Version cmdVersion `cmd:"" name:"version" help:"Show detailed version info."`
-	Create  cmdDigest  `cmd:"" name:"create" aliases:"c" help:"Create digest file for PATH."`
-	Verify  cmdDigest  `cmd:"" name:"verify" aliases:"v" default:"1" help:"Verify digest file for PATH."`
-}
+//go:embed description.txt
+var _Description string
 
-type cmdVersion struct {
+var cli struct {
+	Create cmdDigest `cmd:"" name:"create" aliases:"c" help:"Create digest file for PATH."`
+	Verify cmdDigest `cmd:"" name:"verify" aliases:"v" default:"1" help:"Verify digest file for PATH."`
 }
 
 type cmdDigest struct {
@@ -27,7 +27,11 @@ type cmdDigest struct {
 func main() {
 	var err error
 
-	ctx := kong.Parse(&cli, kong.UsageOnError(), kong.Description("TODO: Description"))
+	ctx := kong.Parse(
+		&cli,
+		kong.Vars{"VERSION": _Version},
+		kong.Description(_Description),
+		kong.UsageOnError())
 
 	switch ctx.Command() {
 
@@ -36,9 +40,6 @@ func main() {
 
 	case "verify", "verify <PATH>":
 		err = digest.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
-
-	case "version":
-		log.Printf("Version: %s", _Version)
 
 	default:
 		err = fmt.Errorf("unknown command: %s", ctx.Command())
