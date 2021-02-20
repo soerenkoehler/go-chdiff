@@ -4,9 +4,11 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/chdiff-go/digest"
+	"github.com/soerenkoehler/chdiff-go/util"
 )
 
 var _Version = "DEV"
@@ -25,21 +27,38 @@ type cmdDigest struct {
 }
 
 func main() {
+	doMain(
+		os.Args,
+		digest.DefaultService{},
+		util.DefaultStdIOService{})
+}
+
+func doMain(
+	args []string,
+	digestService digest.Service,
+	stdioService util.StdIOService) {
+
 	var err error
+
+	os.Args = args
+	log.SetOutput(stdioService.Stdout())
 
 	ctx := kong.Parse(
 		&cli,
 		kong.Vars{"VERSION": _Version},
 		kong.Description(_Description),
-		kong.UsageOnError())
+		kong.UsageOnError(),
+		kong.Writers(
+			stdioService.Stdout(),
+			stdioService.Stderr()))
 
 	switch ctx.Command() {
 
 	case "create", "create <PATH>":
-		err = digest.Create(cli.Create.Path, "out.txt", cli.Create.Mode)
+		err = digestService.Create(cli.Create.Path, "out.txt", cli.Create.Mode)
 
 	case "verify", "verify <PATH>":
-		err = digest.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
+		err = digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
 
 	default:
 		err = fmt.Errorf("unknown command: %s", ctx.Command())

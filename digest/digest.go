@@ -11,11 +11,20 @@ import (
 	"github.com/soerenkoehler/chdiff-go/util"
 )
 
+// Service is the mockable API for the digest service.
+type Service interface {
+	Create(dataPath, digestPath, mode string) error
+	Verify(dataPath, digestPath, mode string) error
+}
+
+// DefaultService ist the production implementation of the digest service.
+type DefaultService struct{}
+
 // Digest is a map file path => checksum
 type Digest map[string]string
 
 // Create ... TODO
-func Create(dataPath, digestPath, mode string) error {
+func (DefaultService) Create(dataPath, digestPath, mode string) error {
 	digest, err := calculate(dataPath, mode)
 	fmt.Printf("Saving %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
@@ -25,7 +34,7 @@ func Create(dataPath, digestPath, mode string) error {
 }
 
 // Verify ... TODO
-func Verify(dataPath, digestPath, mode string) error {
+func (DefaultService) Verify(dataPath, digestPath, mode string) error {
 	digest, err := calculate(dataPath, mode)
 	fmt.Printf("Verify %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
