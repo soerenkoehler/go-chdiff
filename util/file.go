@@ -3,7 +3,6 @@ package util
 import (
 	"log"
 	"os"
-	"path/filepath"
 )
 
 // PathInfo distilles information from FileInfo and EvalSymlinks
@@ -23,7 +22,7 @@ func Stat(path string) PathInfo {
 			IsSymlink: false,
 			Target:    path}
 	}
-	target, _ := filepath.EvalSymlinks(path)
+	target, _ := os.Readlink(path)
 	return PathInfo{
 		IsDir:     info.IsDir(),
 		IsSymlink: 0 != (info.Mode() & os.ModeSymlink),
