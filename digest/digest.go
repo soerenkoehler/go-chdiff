@@ -2,6 +2,7 @@ package digest
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"sort"
@@ -14,28 +15,26 @@ import (
 type Digest map[string]string
 
 // Create ... TODO
-func Create(dataPath, digestPath, mode string) util.ErrorList {
-	digest, errs := calculate(dataPath, mode)
+func Create(dataPath, digestPath, mode string) error {
+	digest, err := calculate(dataPath, mode)
 	fmt.Printf("Saving %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
 		fmt.Printf("%s => %s\n", k, digest[k])
 	}
-	return errs
+	return err
 }
 
 // Verify ... TODO
-func Verify(dataPath, digestPath, mode string) util.ErrorList {
-	digest, errs := calculate(dataPath, mode)
+func Verify(dataPath, digestPath, mode string) error {
+	digest, err := calculate(dataPath, mode)
 	fmt.Printf("Verify %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
 		fmt.Printf("%s => %s\n", k, digest[k])
 	}
-	return errs
+	return err
 }
 
-func calculate(rootPath, mode string) (Digest, util.ErrorList) {
-	errors := util.ErrorList{}
-
+func calculate(rootPath, mode string) (Digest, error) {
 	wait := sync.WaitGroup{}
 
 	var processPath, processDir, processFile func(string)
@@ -44,15 +43,13 @@ func calculate(rootPath, mode string) (Digest, util.ErrorList) {
 	processPath = func(path string) {
 		wait.Add(1)
 		go func() {
-			info, err := os.Stat(path)
-			if err != nil {
-				errors = append(errors, err)
-			} else {
-				if info.IsDir() {
-					processDir(path)
-				} else {
-					processFile(path)
-				}
+			switch info := util.Stat(path); {
+			case info.IsSymlink:
+				log.Printf("skipping symlink: %s => %s", path, info.Target)
+			case info.IsDir:
+				processDir(path)
+			default:
+				processFile(path)
 			}
 			wait.Done()
 		}()
@@ -61,7 +58,7 @@ func calculate(rootPath, mode string) (Digest, util.ErrorList) {
 	processDir = func(dirPath string) {
 		entries, err := os.ReadDir(dirPath)
 		if err != nil {
-			errors = append(errors, err)
+			log.Println(err)
 		}
 		for _, entry := range entries {
 			processPath(path.Join(dirPath, entry.Name()))
@@ -69,13 +66,13 @@ func calculate(rootPath, mode string) (Digest, util.ErrorList) {
 	}
 
 	processFile = func(path string) {
-		fmt.Printf("calculate(%s, %s)\n", mode, path)
+		// fmt.Printf("calculate(%s, %s)\n", mode, path)
 	}
 
 	processPath(rootPath)
 	wait.Wait()
 
-	return Digest{}, errors
+	return Digest{}, nil
 }
 
 func (digest Digest) sortedKeys() []string {

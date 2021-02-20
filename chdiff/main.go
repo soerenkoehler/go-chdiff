@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/chdiff-go/digest"
-	"github.com/soerenkoehler/chdiff-go/util"
 )
 
 var _Version = "DEV"
@@ -26,30 +25,26 @@ type cmdDigest struct {
 }
 
 func main() {
-	if errors := doMain(); len(errors) > 0 {
-		for _, e := range errors {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", e)
-		}
-		os.Exit(1)
-	}
-}
+	var err error
 
-func doMain() util.ErrorList {
 	ctx := kong.Parse(&cli, kong.UsageOnError(), kong.Description("TODO: Description"))
 
 	switch ctx.Command() {
 
 	case "create", "create <PATH>":
-		return digest.Create(cli.Create.Path, "out.txt", cli.Create.Mode)
+		err = digest.Create(cli.Create.Path, "out.txt", cli.Create.Mode)
 
 	case "verify", "verify <PATH>":
-		return digest.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
+		err = digest.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
 
 	case "version":
-		fmt.Fprintln(os.Stdout, _Version)
-		return util.ErrorList{}
+		log.Printf("Version: %s", _Version)
 
 	default:
-		panic(ctx.Command())
+		err = fmt.Errorf("unknown command: %s", ctx.Command())
+	}
+
+	if err != nil {
+		log.Fatalf("Error: %s", err)
 	}
 }
