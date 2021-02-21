@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// PathInfo distilles information from FileInfo and EvalSymlinks
+// PathInfo distilles information from FileInfo and Readlink
 type PathInfo struct {
 	IsDir     bool
 	IsSymlink bool
