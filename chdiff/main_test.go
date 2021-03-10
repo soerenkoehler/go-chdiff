@@ -1,29 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/soerenkoehler/chdiff-go/util"
+	"github.com/soerenkoehler/gomock/mockutil"
 )
 
 type digestServiceMock struct {
-	calls []string
+	mockutil.Registry
 }
 
-func (mock *digestServiceMock) Create(dataPath, digestPath, mode string) error {
-	mock.calls = append(
-		mock.calls,
-		fmt.Sprintf("create %s %s %s", dataPath, digestPath, mode))
+func (mock digestServiceMock) Create(dataPath, digestPath, mode string) error {
+	mockutil.Register(
+		&mock.Registry,
+		mockutil.Call{"create", dataPath, digestPath, mode})
 	return nil
 }
 
 func (mock *digestServiceMock) Verify(dataPath, digestPath, mode string) error {
-	mock.calls = append(
-		mock.calls,
-		fmt.Sprintf("verify %s %s %s", dataPath, digestPath, mode))
+	mockutil.Register(
+		&mock.Registry,
+		mockutil.Call{"verify", dataPath, digestPath, mode})
 	return nil
 }
 
@@ -32,30 +31,19 @@ func expectDigestServiceCall(
 	args []string,
 	call, dataPath, digestPath, mode string) {
 
+	absDataPath, _ := filepath.Abs(dataPath)
+
 	digestService := &digestServiceMock{}
 
 	doMain(args, digestService, util.DefaultStdIOService{})
 
-	absDataPath, _ := filepath.Abs(dataPath)
-	expectedCalls := fmt.Sprintf(
-		"%s %s %s %s",
-		call,
-		absDataPath,
-		digestPath,
-		mode)
-	registeredCalls := strings.Join(digestService.calls, "\n")
-
-	if expectedCalls != registeredCalls {
-		t.Errorf(
-			"\nexpected calls:\n%s\nregistered calls:\n%s",
-			expectedCalls,
-			registeredCalls)
-	}
+	mockutil.Verify(t,
+		&digestService.Registry,
+		mockutil.Call{call, absDataPath, digestPath, mode})
 }
 
 func TestCmdVerifyIsDefault(t *testing.T) {
-	expectDigestServiceCall(
-		t,
+	expectDigestServiceCall(t,
 		[]string{""},
 		"verify",
 		".",
@@ -64,8 +52,7 @@ func TestCmdVerifyIsDefault(t *testing.T) {
 }
 
 func TestCmdVerifyWithoutPath(t *testing.T) {
-	expectDigestServiceCall(
-		t,
+	expectDigestServiceCall(t,
 		[]string{"", "v"},
 		"verify",
 		".",
@@ -74,8 +61,7 @@ func TestCmdVerifyWithoutPath(t *testing.T) {
 }
 
 func TestCmdVerifyWithPath(t *testing.T) {
-	expectDigestServiceCall(
-		t,
+	expectDigestServiceCall(t,
 		[]string{"", "v", "x"},
 		"verify",
 		"x",
