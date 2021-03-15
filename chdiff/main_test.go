@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/soerenkoehler/chdiff-go/util"
-	"github.com/soerenkoehler/gomock/mockutil"
+	"github.com/soerenkoehler/go-testutils/mockutil"
 )
 
 type digestServiceMock struct {
