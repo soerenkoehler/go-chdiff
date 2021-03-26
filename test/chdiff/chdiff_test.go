@@ -36,7 +36,7 @@ func expectDigestServiceCall(
 
 	digestService := &digestServiceMock{}
 
-	chdiff.DoMain(args, digestService, util.DefaultStdIOService{})
+	chdiff.DoMain("TEST", args, digestService, util.DefaultStdIOService{})
 
 	mockutil.Verify(t,
 		&digestService.Registry,

@@ -11,8 +11,6 @@ import (
 	"github.com/soerenkoehler/chdiff-go/main/util"
 )
 
-var _Version = "DEV"
-
 //go:embed description.txt
 var _Description string
 
@@ -26,14 +24,8 @@ type cmdDigest struct {
 	Mode string `name:"mode" short:"m" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
 }
 
-func main() {
-	DoMain(
-		os.Args,
-		digest.DefaultService{},
-		util.DefaultStdIOService{})
-}
-
 func DoMain(
+	version string,
 	args []string,
 	digestService digest.Service,
 	stdioService util.StdIOService) {
@@ -45,7 +37,7 @@ func DoMain(
 
 	ctx := kong.Parse(
 		&cli,
-		kong.Vars{"VERSION": _Version},
+		kong.Vars{"VERSION": version},
 		kong.Description(_Description),
 		kong.UsageOnError(),
 		kong.Writers(

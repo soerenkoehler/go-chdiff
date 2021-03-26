@@ -13,6 +13,7 @@ var _Version = "DEV"
 
 func main() {
 	chdiff.DoMain(
+		_Version,
 		os.Args,
 		digest.DefaultService{},
 		util.DefaultStdIOService{})
