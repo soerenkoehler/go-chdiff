@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/soerenkoehler/chdiff-go/main/chdiff"
-	"github.com/soerenkoehler/chdiff-go/main/util"
+	"github.com/soerenkoehler/chdiff-go/chdiff"
+	"github.com/soerenkoehler/chdiff-go/util"
 	"github.com/soerenkoehler/go-testutils/mockutil"
 )
 

@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/soerenkoehler/chdiff-go/main/digest"
-	"github.com/soerenkoehler/chdiff-go/main/util"
+	"github.com/soerenkoehler/chdiff-go/digest"
+	"github.com/soerenkoehler/chdiff-go/util"
 )
 
 //go:embed description.txt

@@ -4,9 +4,9 @@ import (
 	_ "embed"
 	"os"
 
-	"github.com/soerenkoehler/chdiff-go/main/chdiff"
-	"github.com/soerenkoehler/chdiff-go/main/digest"
-	"github.com/soerenkoehler/chdiff-go/main/util"
+	"github.com/soerenkoehler/chdiff-go/chdiff"
+	"github.com/soerenkoehler/chdiff-go/digest"
+	"github.com/soerenkoehler/chdiff-go/util"
 )
 
 var _Version = "DEV"
