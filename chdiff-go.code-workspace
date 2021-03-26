@@ -1,9 +1,12 @@
 {
 	"folders": [
-		{
-			"path": "."
-		}
-	],
+        {
+            "path": "main"
+        },
+        {
+            "path": "test"
+        }
+    ],
 	"settings": {
 		"files.exclude": {
 			"**/__debug*": true,

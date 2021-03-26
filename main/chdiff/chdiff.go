@@ -1,4 +1,4 @@
-package main
+package chdiff
 
 import (
 	_ "embed"
@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/soerenkoehler/chdiff-go/digest"
-	"github.com/soerenkoehler/chdiff-go/util"
+	"github.com/soerenkoehler/chdiff-go/main/digest"
+	"github.com/soerenkoehler/chdiff-go/main/util"
 )
 
 var _Version = "DEV"
@@ -27,13 +27,13 @@ type cmdDigest struct {
 }
 
 func main() {
-	doMain(
+	DoMain(
 		os.Args,
 		digest.DefaultService{},
 		util.DefaultStdIOService{})
 }
 
-func doMain(
+func DoMain(
 	args []string,
 	digestService digest.Service,
 	stdioService util.StdIOService) {

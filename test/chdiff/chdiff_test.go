@@ -1,10 +1,11 @@
-package main
+package chdiff_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/soerenkoehler/chdiff-go/util"
+	"github.com/soerenkoehler/chdiff-go/main/chdiff"
+	"github.com/soerenkoehler/chdiff-go/main/util"
 	"github.com/soerenkoehler/go-testutils/mockutil"
 )
 
@@ -35,7 +36,7 @@ func expectDigestServiceCall(
 
 	digestService := &digestServiceMock{}
 
-	doMain(args, digestService, util.DefaultStdIOService{})
+	chdiff.DoMain(args, digestService, util.DefaultStdIOService{})
 
 	mockutil.Verify(t,
 		&digestService.Registry,

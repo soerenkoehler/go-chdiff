@@ -8,7 +8,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/soerenkoehler/chdiff-go/util"
+	"github.com/soerenkoehler/chdiff-go/main/util"
 )
 
 // Service is the mockable API for the digest service.
