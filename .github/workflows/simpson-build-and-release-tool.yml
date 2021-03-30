@@ -27,4 +27,4 @@ jobs:
       - name: Build
         run: |
           go get github.com/soerenkoehler/simpson@main
-          go run github.com/soerenkoehler/simpson ./chdiff --all-targets --latest
+          go run github.com/soerenkoehler/simpson --all-targets --latest --artifact-name chdiff
