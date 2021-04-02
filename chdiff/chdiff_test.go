@@ -13,26 +13,27 @@ type digestServiceMock struct {
 	mockutil.Registry
 }
 
-func (mock digestServiceMock) Create(dataPath, digestPath, mode string) error {
+func (mock digestServiceMock) Create(dataPath, digestPath, algorithm string) error {
 	mockutil.Register(
 		&mock.Registry,
-		mockutil.Call{"create", dataPath, digestPath, mode})
+		mockutil.Call{"create", dataPath, digestPath, algorithm})
 	return nil
 }
 
-func (mock *digestServiceMock) Verify(dataPath, digestPath, mode string) error {
+func (mock *digestServiceMock) Verify(dataPath, digestPath, algorithm string) error {
 	mockutil.Register(
 		&mock.Registry,
-		mockutil.Call{"verify", dataPath, digestPath, mode})
+		mockutil.Call{"verify", dataPath, digestPath, algorithm})
 	return nil
 }
 
 func expectDigestServiceCall(
 	t *testing.T,
 	args []string,
-	call, dataPath, digestPath, mode string) {
+	call, dataPath, digestPath, algorithm string) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
+	absDigestPath, _ := filepath.Abs(digestPath)
 
 	digestService := &digestServiceMock{}
 
@@ -40,7 +41,7 @@ func expectDigestServiceCall(
 
 	mockutil.Verify(t,
 		&digestService.Registry,
-		mockutil.Call{call, absDataPath, digestPath, mode})
+		mockutil.Call{call, absDataPath, absDigestPath, algorithm})
 }
 
 func TestCmdVerifyIsDefault(t *testing.T) {

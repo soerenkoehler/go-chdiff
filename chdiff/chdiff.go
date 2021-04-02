@@ -20,8 +20,8 @@ var cli struct {
 }
 
 type cmdDigest struct {
-	Path string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
-	Mode string `name:"mode" short:"m" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
+	Path      string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
+	Algorithm string `name:"alg" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
 }
 
 func DoMain(
@@ -47,10 +47,10 @@ func DoMain(
 	switch ctx.Command() {
 
 	case "create", "create <PATH>":
-		err = digestService.Create(cli.Create.Path, "out.txt", cli.Create.Mode)
+		err = digestService.Create(cli.Create.Path, "out.txt", cli.Create.Algorithm)
 
 	case "verify", "verify <PATH>":
-		err = digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
+		err = digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Algorithm)
 
 	default:
 		err = fmt.Errorf("unknown command: %s", ctx.Command())

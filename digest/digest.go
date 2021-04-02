@@ -7,80 +7,91 @@ import (
 	"path"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/soerenkoehler/chdiff-go/util"
 )
 
+type DigestEntry struct {
+	path    string
+	hash    string
+	size    int64
+	modTime time.Time
+}
+
+type Digest map[string]DigestEntry
+
+type DigestContext struct {
+	rootpath  string
+	algorithm string
+	waitgroup *sync.WaitGroup
+}
+
 // Service is the mockable API for the digest service.
 type Service interface {
-	Create(dataPath, digestPath, mode string) error
-	Verify(dataPath, digestPath, mode string) error
+	Create(dataPath, digestPath, algorithm string) error
+	Verify(dataPath, digestPath, algorithm string) error
 }
 
 // DefaultService ist the production implementation of the digest service.
 type DefaultService struct{}
 
-// Digest is a map file path => checksum
-type Digest map[string]string
-
-// Create ... TODO
-func (DefaultService) Create(dataPath, digestPath, mode string) error {
-	digest, err := calculate(dataPath, mode)
+func (DefaultService) Create(dataPath, digestPath, algorithm string) error {
+	digest, err := calculateDigest(dataPath, algorithm)
 	fmt.Printf("Saving %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
-		fmt.Printf("%s => %s\n", k, digest[k])
+		fmt.Printf("%s => %v\n", k, digest[k])
 	}
 	return err
 }
 
-// Verify ... TODO
-func (DefaultService) Verify(dataPath, digestPath, mode string) error {
-	digest, err := calculate(dataPath, mode)
+func (DefaultService) Verify(dataPath, digestPath, algorithm string) error {
+	digest, err := calculateDigest(dataPath, algorithm)
 	fmt.Printf("Verify %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
-		fmt.Printf("%s => %s\n", k, digest[k])
+		fmt.Printf("%s => %v\n", k, digest[k])
 	}
 	return err
 }
 
-func calculate(rootPath, mode string) (Digest, error) {
-	wait := sync.WaitGroup{}
-
-	var processPath, processDir, processFile func(string)
-
-	processPath = func(path string) {
-		wait.Add(1)
-		go func() {
-			switch info := util.Stat(path); {
-			case info.IsSymlink:
-				log.Printf("skipping symlink: %s => %s", path, info.Target)
-			case info.IsDir:
-				processDir(path)
-			default:
-				processFile(path)
-			}
-			wait.Done()
-		}()
+func calculateDigest(rootpath, algorithm string) (Digest, error) {
+	context := DigestContext{
+		rootpath:  rootpath,
+		algorithm: algorithm,
+		waitgroup: &sync.WaitGroup{},
 	}
-
-	processDir = func(dirPath string) {
-		entries, err := os.ReadDir(dirPath)
-		if err != nil {
-			log.Println(err)
-		}
-		for _, entry := range entries {
-			processPath(path.Join(dirPath, entry.Name()))
-		}
-	}
-
-	processFile = func(path string) {
-		// fmt.Printf("calculate(%s, %s)\n", mode, path)
-	}
-
-	processPath(rootPath)
-	wait.Wait()
-
+	context.processPath(context.rootpath)
+	context.waitgroup.Wait()
 	return Digest{}, nil
+}
+
+func (context DigestContext) processPath(path string) {
+	context.waitgroup.Add(1)
+	go func() {
+		switch info := util.Stat(path); {
+		case info.IsSymlink:
+			log.Printf("skipping symlink: %s => %s", path, info.Target)
+		case info.IsDir:
+			context.processDir(path)
+		default:
+			context.processFile(path)
+		}
+		context.waitgroup.Done()
+	}()
+}
+
+func (context DigestContext) processDir(dirPath string) {
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		log.Println(err)
+	}
+	for _, entry := range entries {
+		context.processPath(path.Join(dirPath, entry.Name()))
+	}
+}
+
+func (context DigestContext) processFile(path string) {
+	// fmt.Printf("calculate(%s, %s)\n", context.algorithm, path)
 }
 
 func (digest Digest) sortedKeys() []string {
