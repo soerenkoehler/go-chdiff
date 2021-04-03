@@ -13,18 +13,16 @@ type digestServiceMock struct {
 	mockutil.Registry
 }
 
-func (mock digestServiceMock) Create(dataPath, digestPath, algorithm string) error {
+func (mock digestServiceMock) Create(dataPath, digestPath, algorithm string) {
 	mockutil.Register(
 		&mock.Registry,
 		mockutil.Call{"create", dataPath, digestPath, algorithm})
-	return nil
 }
 
-func (mock *digestServiceMock) Verify(dataPath, digestPath, algorithm string) error {
+func (mock *digestServiceMock) Verify(dataPath, digestPath, algorithm string) {
 	mockutil.Register(
 		&mock.Registry,
 		mockutil.Call{"verify", dataPath, digestPath, algorithm})
-	return nil
 }
 
 func expectDigestServiceCall(

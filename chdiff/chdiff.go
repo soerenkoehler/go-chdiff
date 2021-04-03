@@ -2,7 +2,6 @@ package chdiff
 
 import (
 	_ "embed"
-	"fmt"
 	"log"
 	"os"
 
@@ -30,8 +29,6 @@ func DoMain(
 	digestService digest.Service,
 	stdioService util.StdIOService) {
 
-	var err error
-
 	os.Args = args
 	log.SetOutput(stdioService.Stdout())
 
@@ -47,16 +44,12 @@ func DoMain(
 	switch ctx.Command() {
 
 	case "create", "create <PATH>":
-		err = digestService.Create(cli.Create.Path, "out.txt", cli.Create.Algorithm)
+		digestService.Create(cli.Create.Path, "out.txt", cli.Create.Algorithm)
 
 	case "verify", "verify <PATH>":
-		err = digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Algorithm)
+		digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Algorithm)
 
 	default:
-		err = fmt.Errorf("unknown command: %s", ctx.Command())
-	}
-
-	if err != nil {
-		log.Fatalf("Error: %s", err)
+		log.Fatalf("unknown command: %s", ctx.Command())
 	}
 }
