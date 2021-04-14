@@ -1,6 +1,7 @@
 package chdiff_test
 
 import (
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -31,7 +32,7 @@ func expectDigestServiceCall(
 	call, dataPath, digestPath, algorithm string) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
-	absDigestPath, _ := filepath.Abs(digestPath)
+	absDigestPath := path.Join(absDataPath, digestPath)
 
 	digestService := &digestServiceMock{}
 

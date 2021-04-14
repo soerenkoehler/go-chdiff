@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"log"
 	"os"
+	"path"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/chdiff-go/digest"
@@ -44,10 +45,16 @@ func DoMain(
 	switch ctx.Command() {
 
 	case "create", "create <PATH>":
-		digestService.Create(cli.Create.Path, "out.txt", cli.Create.Algorithm)
+		digestService.Create(
+			cli.Create.Path,
+			path.Join(cli.Create.Path, "out.txt"),
+			cli.Create.Algorithm)
 
 	case "verify", "verify <PATH>":
-		digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Algorithm)
+		digestService.Verify(
+			cli.Verify.Path,
+			path.Join(cli.Verify.Path, "out.txt"),
+			cli.Verify.Algorithm)
 
 	default:
 		log.Fatalf("unknown command: %s", ctx.Command())
