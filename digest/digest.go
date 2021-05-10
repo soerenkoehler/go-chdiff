@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ import (
 )
 
 type DigestEntry struct {
-	path    string
+	file    string
 	hash    string
 	size    int64
 	modTime time.Time
@@ -69,7 +70,7 @@ func calculateDigest(rootpath, algorithm string) Digest {
 
 	result := Digest{}
 	for entry := range context.digest {
-		result[entry.path] = entry
+		result[entry.file] = entry
 	}
 
 	return result
@@ -90,28 +91,35 @@ func (context DigestContext) processPath(path string) {
 	}()
 }
 
-func (context DigestContext) processDir(dirPath string) {
-	entries, err := os.ReadDir(dirPath)
+func (context DigestContext) processDir(dir string) {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		log.Printf("[E]: %s\n", err)
 	} else {
 		for _, entry := range entries {
-			context.processPath(path.Join(dirPath, entry.Name()))
+			context.processPath(path.Join(dir, entry.Name()))
 		}
 	}
 }
 
-func (context DigestContext) processFile(path string) {
-	info, err := os.Lstat(path)
+func (context DigestContext) processFile(file string) {
+	info, err := os.Lstat(file)
 	if err != nil {
 		log.Printf("[E]: %s\n", err)
-	} else {
-		context.digest <- DigestEntry{
-			path:    path,
-			hash:    "tbd",
-			size:    info.Size(),
-			modTime: info.ModTime(),
-		}
+		return
+	}
+
+	relativePath, err := filepath.Rel(context.rootpath, file)
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
+	}
+
+	context.digest <- DigestEntry{
+		file:    relativePath,
+		hash:    "tbd",
+		size:    info.Size(),
+		modTime: info.ModTime(),
 	}
 }
 
@@ -129,7 +137,7 @@ func (entry DigestEntry) entryToString() string {
 		"# %d %s %s\n%s *%s\n",
 		entry.size,
 		entry.modTime.Local().Format("20060102-150405"),
-		entry.path,
+		entry.file,
 		entry.hash,
-		entry.path)
+		entry.file)
 }
