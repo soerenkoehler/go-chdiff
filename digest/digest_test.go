@@ -41,9 +41,10 @@ func runDigestCalculationTest(t *testing.T, data []testCase) {
 		expectedHash := dataPoint.hash
 		actualHash := digest[expectedPath].hash
 		if actualHash != expectedHash {
-			t.Errorf("actual hash (%v) must match expected hash (%s)",
+			t.Errorf("actual hash (%v) must match expected hash (%v) (test file: %v)",
 				actualHash,
-				expectedHash)
+				expectedHash,
+				expectedPath)
 		}
 	}
 }
