@@ -33,11 +33,13 @@ func expectDigestServiceCall(
 	absDataPath, _ := filepath.Abs(dataPath)
 	absDigestPath := path.Join(absDataPath, digestPath)
 
-	digestService := &digestServiceMock{}
+	digestService := &digestServiceMock{
+		Registry: mockutil.Registry{T: t},
+	}
 
 	DoMain("TEST", args, digestService, util.DefaultStdIOService{})
 
-	mockutil.Verify(t,
+	mockutil.Verify(
 		&digestService.Registry,
 		mockutil.Call{call, absDataPath, absDigestPath, algorithm})
 }
