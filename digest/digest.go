@@ -2,8 +2,10 @@ package digest
 
 import (
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"io"
 	"log"
 	"os"
@@ -118,12 +120,20 @@ func (context DigestContext) processFile(file string) {
 		return
 	}
 
-	checksum := sha256.New()
-	input, err := os.Open(file)
-	if err == nil {
-		defer input.Close()
-		io.Copy(checksum, input)
+	checksum, err := context.getNewHash()
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
 	}
+
+	input, err := os.Open(file)
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
+	}
+
+	defer input.Close()
+	io.Copy(checksum, input)
 
 	context.digest <- DigestEntry{
 		file:    relativePath,
@@ -131,6 +141,16 @@ func (context DigestContext) processFile(file string) {
 		size:    info.Size(),
 		modTime: info.ModTime(),
 	}
+}
+
+func (context DigestContext) getNewHash() (hash.Hash, error) {
+	switch context.algorithm {
+	case "SHA256":
+		return sha256.New(), nil
+	case "SHA512":
+		return sha512.New(), nil
+	}
+	return nil, fmt.Errorf("invalid hash algorithm %v", context.algorithm)
 }
 
 func (digest Digest) sortedKeys() []string {
