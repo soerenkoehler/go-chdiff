@@ -1,10 +1,10 @@
-package chdiff_test
+package chdiff
 
 import (
+	"path"
 	"path/filepath"
 	"testing"
 
-	"github.com/soerenkoehler/chdiff-go/chdiff"
 	"github.com/soerenkoehler/chdiff-go/util"
 	"github.com/soerenkoehler/go-testutils/mockutil"
 )
@@ -13,34 +13,35 @@ type digestServiceMock struct {
 	mockutil.Registry
 }
 
-func (mock digestServiceMock) Create(dataPath, digestPath, mode string) error {
+func (mock digestServiceMock) Create(dataPath, digestPath, algorithm string) {
 	mockutil.Register(
 		&mock.Registry,
-		mockutil.Call{"create", dataPath, digestPath, mode})
-	return nil
+		mockutil.Call{"create", dataPath, digestPath, algorithm})
 }
 
-func (mock *digestServiceMock) Verify(dataPath, digestPath, mode string) error {
+func (mock *digestServiceMock) Verify(dataPath, digestPath, algorithm string) {
 	mockutil.Register(
 		&mock.Registry,
-		mockutil.Call{"verify", dataPath, digestPath, mode})
-	return nil
+		mockutil.Call{"verify", dataPath, digestPath, algorithm})
 }
 
 func expectDigestServiceCall(
 	t *testing.T,
 	args []string,
-	call, dataPath, digestPath, mode string) {
+	call, dataPath, digestPath, algorithm string) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
+	absDigestPath := path.Join(absDataPath, digestPath)
 
-	digestService := &digestServiceMock{}
+	digestService := &digestServiceMock{
+		Registry: mockutil.Registry{T: t},
+	}
 
-	chdiff.DoMain("TEST", args, digestService, util.DefaultStdIOService{})
+	DoMain("TEST", args, digestService, util.DefaultStdIOService{})
 
-	mockutil.Verify(t,
+	mockutil.Verify(
 		&digestService.Registry,
-		mockutil.Call{call, absDataPath, digestPath, mode})
+		mockutil.Call{call, absDataPath, absDigestPath, algorithm})
 }
 
 func TestCmdVerifyIsDefault(t *testing.T) {

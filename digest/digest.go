@@ -1,86 +1,156 @@
 package digest
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
+	"hash"
+	"io"
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/soerenkoehler/chdiff-go/util"
 )
 
+type DigestEntry struct {
+	file    string
+	hash    string
+	size    int64
+	modTime time.Time
+}
+
+type Digest map[string]DigestEntry
+
+type DigestContext struct {
+	rootpath  string
+	algorithm string
+	waitgroup *sync.WaitGroup
+	digest    chan DigestEntry
+}
+
 // Service is the mockable API for the digest service.
 type Service interface {
-	Create(dataPath, digestPath, mode string) error
-	Verify(dataPath, digestPath, mode string) error
+	Create(dataPath, digestPath, algorithm string)
+	Verify(dataPath, digestPath, algorithm string)
 }
 
 // DefaultService ist the production implementation of the digest service.
 type DefaultService struct{}
 
-// Digest is a map file path => checksum
-type Digest map[string]string
-
-// Create ... TODO
-func (DefaultService) Create(dataPath, digestPath, mode string) error {
-	digest, err := calculate(dataPath, mode)
+func (DefaultService) Create(dataPath, digestPath, algorithm string) {
+	digest := calculateDigest(dataPath, algorithm)
 	fmt.Printf("Saving %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
-		fmt.Printf("%s => %s\n", k, digest[k])
+		fmt.Print(digest[k].entryToString())
 	}
-	return err
 }
 
-// Verify ... TODO
-func (DefaultService) Verify(dataPath, digestPath, mode string) error {
-	digest, err := calculate(dataPath, mode)
+func (DefaultService) Verify(dataPath, digestPath, algorithm string) {
+	digest := calculateDigest(dataPath, algorithm)
 	fmt.Printf("Verify %s\n", digestPath)
 	for _, k := range digest.sortedKeys() {
-		fmt.Printf("%s => %s\n", k, digest[k])
+		fmt.Print(digest[k].entryToString())
 	}
-	return err
 }
 
-func calculate(rootPath, mode string) (Digest, error) {
-	wait := sync.WaitGroup{}
-
-	var processPath, processDir, processFile func(string)
-
-	processPath = func(path string) {
-		wait.Add(1)
-		go func() {
-			switch info := util.Stat(path); {
-			case info.IsSymlink:
-				log.Printf("skipping symlink: %s => %s", path, info.Target)
-			case info.IsDir:
-				processDir(path)
-			default:
-				processFile(path)
-			}
-			wait.Done()
-		}()
+func calculateDigest(rootpath, algorithm string) Digest {
+	context := DigestContext{
+		rootpath:  rootpath,
+		algorithm: algorithm,
+		waitgroup: &sync.WaitGroup{},
+		digest:    make(chan DigestEntry),
 	}
 
-	processDir = func(dirPath string) {
-		entries, err := os.ReadDir(dirPath)
-		if err != nil {
-			log.Println(err)
+	go func() {
+		context.processPath(context.rootpath)
+		context.waitgroup.Wait()
+		close(context.digest)
+	}()
+
+	result := Digest{}
+	for entry := range context.digest {
+		result[entry.file] = entry
+	}
+
+	return result
+}
+
+func (context DigestContext) processPath(path string) {
+	context.waitgroup.Add(1)
+	go func() {
+		switch info := util.Stat(path); {
+		case info.IsSymlink:
+			log.Printf("[W] skipping symlink: %s => %s", path, info.Target)
+		case info.IsDir:
+			context.processDir(path)
+		default:
+			context.processFile(path)
 		}
+		context.waitgroup.Done()
+	}()
+}
+
+func (context DigestContext) processDir(dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+	} else {
 		for _, entry := range entries {
-			processPath(path.Join(dirPath, entry.Name()))
+			context.processPath(path.Join(dir, entry.Name()))
 		}
 	}
+}
 
-	processFile = func(path string) {
-		// fmt.Printf("calculate(%s, %s)\n", mode, path)
+func (context DigestContext) processFile(file string) {
+	info, err := os.Lstat(file)
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
 	}
 
-	processPath(rootPath)
-	wait.Wait()
+	relativePath, err := filepath.Rel(context.rootpath, file)
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
+	}
 
-	return Digest{}, nil
+	checksum, err := context.getNewHash()
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
+	}
+
+	input, err := os.Open(file)
+	if err != nil {
+		log.Printf("[E]: %s\n", err)
+		return
+	}
+
+	defer input.Close()
+	io.Copy(checksum, input)
+
+	context.digest <- DigestEntry{
+		file:    relativePath,
+		hash:    hex.EncodeToString(checksum.Sum(nil)),
+		size:    info.Size(),
+		modTime: info.ModTime(),
+	}
+}
+
+func (context DigestContext) getNewHash() (hash.Hash, error) {
+	switch context.algorithm {
+	case "SHA256":
+		return sha256.New(), nil
+	case "SHA512":
+		return sha512.New(), nil
+	}
+	return nil, fmt.Errorf("invalid hash algorithm %v", context.algorithm)
 }
 
 func (digest Digest) sortedKeys() []string {
@@ -90,4 +160,14 @@ func (digest Digest) sortedKeys() []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func (entry DigestEntry) entryToString() string {
+	return fmt.Sprintf(
+		"# %d %s %s\n%s *%s\n",
+		entry.size,
+		entry.modTime.Local().Format("20060102-150405"),
+		entry.file,
+		entry.hash,
+		entry.file)
 }

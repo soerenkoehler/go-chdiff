@@ -2,9 +2,9 @@ package chdiff
 
 import (
 	_ "embed"
-	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/chdiff-go/digest"
@@ -20,8 +20,8 @@ var cli struct {
 }
 
 type cmdDigest struct {
-	Path string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
-	Mode string `name:"mode" short:"m" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
+	Path      string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
+	Algorithm string `name:"alg" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
 }
 
 func DoMain(
@@ -29,8 +29,6 @@ func DoMain(
 	args []string,
 	digestService digest.Service,
 	stdioService util.StdIOService) {
-
-	var err error
 
 	os.Args = args
 	log.SetOutput(stdioService.Stdout())
@@ -47,16 +45,18 @@ func DoMain(
 	switch ctx.Command() {
 
 	case "create", "create <PATH>":
-		err = digestService.Create(cli.Create.Path, "out.txt", cli.Create.Mode)
+		digestService.Create(
+			cli.Create.Path,
+			path.Join(cli.Create.Path, "out.txt"),
+			cli.Create.Algorithm)
 
 	case "verify", "verify <PATH>":
-		err = digestService.Verify(cli.Verify.Path, "out.txt", cli.Verify.Mode)
+		digestService.Verify(
+			cli.Verify.Path,
+			path.Join(cli.Verify.Path, "out.txt"),
+			cli.Verify.Algorithm)
 
 	default:
-		err = fmt.Errorf("unknown command: %s", ctx.Command())
-	}
-
-	if err != nil {
-		log.Fatalf("Error: %s", err)
+		log.Fatalf("unknown command: %s", ctx.Command())
 	}
 }

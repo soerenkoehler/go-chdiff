@@ -1,15 +1,5 @@
-External Docs
--------------
-
-### Kong ###
-
-* [Kong](https://github.com/alecthomas/kong)
-
-### Docopt ###
-
-* [Main Project](http://docopt.org/)
-* [Docopt-go](https://godoc.org/github.com/docopt/docopt-go)
-  => Bug: Leerzeilen in Options-Doc Fork? Oder Kong?
+Notes & External Docs
+---------------------
 
 ### Cross Compiling ###
 
