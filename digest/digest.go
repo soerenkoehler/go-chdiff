@@ -1,7 +1,10 @@
 package digest
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -115,9 +118,16 @@ func (context DigestContext) processFile(file string) {
 		return
 	}
 
+	checksum := sha256.New()
+	input, err := os.Open(file)
+	if err == nil {
+		defer input.Close()
+		io.Copy(checksum, input)
+	}
+
 	context.digest <- DigestEntry{
 		file:    relativePath,
-		hash:    "tbd",
+		hash:    hex.EncodeToString(checksum.Sum(nil)),
 		size:    info.Size(),
 		modTime: info.ModTime(),
 	}
