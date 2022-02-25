@@ -99,7 +99,7 @@ func verifyDataPoint(
 	}
 
 	expectedHash := dataPoint.hash
-	actualHash := digestEntry.hash
+	actualHash := digestEntry.Hash
 	if actualHash != expectedHash {
 		t.Errorf("hash mismatch\nexpected: %v\nactual: %v\ntest file: %v",
 			expectedHash,

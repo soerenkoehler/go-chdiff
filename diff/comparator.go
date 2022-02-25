@@ -20,10 +20,36 @@ var statusIcon map[diffStatus]string = map[diffStatus]string{
 	Removed:   "-"}
 
 func Compare(old, new digest.Digest) Diff {
+	diffEntries := diffEntries{}
+
+	// step 1: identical, modified and removed files
+	for path, oldEntry := range *old.Entries {
+		status := Removed
+		if newEntry, newExists := (*new.Entries)[path]; newExists {
+			if oldEntry.Hash == newEntry.Hash {
+				status = Identical
+			} else {
+				status = Modified
+			}
+		}
+		diffEntries[path] = diffEntry{
+			file:   path,
+			status: status}
+	}
+
+	// step 2: added files
+	for path, _ := range *new.Entries {
+		if _, oldExists := (*old.Entries)[path]; !oldExists {
+			diffEntries[path] = diffEntry{
+				file:   path,
+				status: Added}
+		}
+	}
+
 	return Diff{
 		locationA: old.Location,
 		locationB: new.Location,
-		entries:   diffEntries{}}
+		entries:   diffEntries}
 }
 
 func Print(out io.Writer, diff Diff) {

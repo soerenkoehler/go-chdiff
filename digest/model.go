@@ -8,7 +8,7 @@ import (
 
 type digestEntry struct {
 	file    string
-	hash    string
+	Hash    string
 	size    int64
 	modTime time.Time
 }
@@ -39,7 +39,7 @@ func (digest Digest) AddNewEntry(
 
 	return digest.AddEntry(digestEntry{
 		file:    file,
-		hash:    hash,
+		Hash:    hash,
 		size:    size,
 		modTime: time})
 }
