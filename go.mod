@@ -1,8 +1,12 @@
-module github.com/soerenkoehler/chdiff-go
+module github.com/soerenkoehler/go-chdiff
 
-go 1.16
+go 1.17
 
 require (
-	github.com/alecthomas/kong v0.2.16
-	github.com/soerenkoehler/go-testutils v0.0.1
+	github.com/alecthomas/kong v0.4.0
+	github.com/soerenkoehler/go-testutils v0.0.2
 )
+
+require github.com/pkg/errors v0.9.1 // indirect
+
+// replace github.com/soerenkoehler/go-testutils => ../go-testutils

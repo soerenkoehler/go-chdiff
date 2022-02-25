@@ -3,6 +3,7 @@ package util
 import (
 	"log"
 	"os"
+	"path/filepath"
 )
 
 // PathInfo distilles information from FileInfo and Readlink
@@ -15,16 +16,18 @@ type PathInfo struct {
 // Stat checks if a path is a directory, a symlink or otherwise a regular file.
 func Stat(path string) PathInfo {
 	info, err := os.Lstat(path)
-	if err != nil {
-		log.Printf("[E]: %s\n", err)
-		return PathInfo{
-			IsDir:     false,
-			IsSymlink: false,
-			Target:    path}
+	if err == nil {
+		target, err := filepath.EvalSymlinks(path)
+		if err == nil {
+			return PathInfo{
+				IsDir:     info.IsDir(),
+				IsSymlink: (info.Mode() & os.ModeSymlink) != 0,
+				Target:    target}
+		}
 	}
-	target, _ := os.Readlink(path)
+	log.Printf("[E]: %s\n", err)
 	return PathInfo{
-		IsDir:     info.IsDir(),
-		IsSymlink: 0 != (info.Mode() & os.ModeSymlink),
-		Target:    target}
+		IsDir:     false,
+		IsSymlink: false,
+		Target:    path}
 }

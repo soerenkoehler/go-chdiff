@@ -1,6 +1,8 @@
 package digest
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
 	"path"
 	"testing"
 
@@ -15,19 +17,8 @@ type testCase struct {
 	hash string
 }
 
-func TestWrongAlgorithm(t *testing.T) {
-	if len(createDigest(t, []testCase{{
-		path: "invalid",
-		size: 0,
-		seed: 1,
-		hash: "invalid",
-	}}, "INVALID")) != 0 {
-		t.Fatal("invalid algorithm must not create digest entries")
-	}
-}
-
 func TestDigest256(t *testing.T) {
-	runDigestCalculationTest(t, []testCase{{
+	verifyDigest(t, []testCase{{
 		path: "zero",
 		size: 0,
 		seed: 1,
@@ -42,11 +33,11 @@ func TestDigest256(t *testing.T) {
 		size: 256,
 		seed: 1,
 		hash: "a6452fbd8c12f8df622c1ca4c567f966801fb56442aca03b4e1303e7a412a9d5",
-	}}, "SHA256")
+	}}, sha256.New)
 }
 
 func TestDigest512(t *testing.T) {
-	runDigestCalculationTest(t, []testCase{{
+	verifyDigest(t, []testCase{{
 		path: "zero",
 		size: 0,
 		seed: 1,
@@ -61,22 +52,28 @@ func TestDigest512(t *testing.T) {
 		size: 256,
 		seed: 1,
 		hash: "f3f00e46e5dc3819b8268afedb1221f25a4c29d3223979ede1df107155cc75bd427a5795b820fbd83fd4785899cb9de201b770a2c88a3bed90be37e82156e10b",
-	}}, "SHA512")
+	}}, sha512.New)
 }
 
-func runDigestCalculationTest(
+func verifyDigest(
 	t *testing.T,
 	data []testCase,
-	algorithm string) {
+	hashFactory HashFactory) {
 
-	verifyDigest(t, data,
-		createDigest(t, data, algorithm))
+	digest := Calculate(createData(t, data), hashFactory)
+
+	if len(*digest.Entries) != len(data) {
+		t.Fatal("Digest size must match number of input data points")
+	}
+
+	for _, dataPoint := range data {
+		verifyDataPoint(t, dataPoint, (*digest.Entries)[dataPoint.path])
+	}
 }
 
-func createDigest(
+func createData(
 	t *testing.T,
-	data []testCase,
-	algorithm string) Digest {
+	data []testCase) string {
 
 	root := t.TempDir()
 
@@ -85,34 +82,28 @@ func createDigest(
 		datautil.CreateRandomFile(file, dataPoint.size, dataPoint.seed)
 	}
 
-	return calculateDigest(root, algorithm)
+	return root
 }
 
-func verifyDigest(
+func verifyDataPoint(
 	t *testing.T,
-	data []testCase,
-	digest Digest) {
+	dataPoint testCase,
+	digestEntry digestEntry) {
 
-	if len(digest) != len(data) {
-		t.Fatal("Digest size must match number of input data points")
+	expectedPath := dataPoint.path
+	actualPath := digestEntry.file
+	if actualPath != expectedPath {
+		t.Errorf("DigestEntry.file (%v) must match Digest map key (%v)",
+			actualPath,
+			expectedPath)
 	}
 
-	for _, dataPoint := range data {
-		expectedPath := dataPoint.path
-		actualPath := digest[expectedPath].file
-		if actualPath != expectedPath {
-			t.Errorf("DigestEntry.file (%v) must match Digest map key (%v)",
-				actualPath,
-				expectedPath)
-		}
-
-		expectedHash := dataPoint.hash
-		actualHash := digest[expectedPath].hash
-		if actualHash != expectedHash {
-			t.Errorf("actual hash (%v) does not match expected hash (%v) (test file: %v)",
-				actualHash,
-				expectedHash,
-				expectedPath)
-		}
+	expectedHash := dataPoint.hash
+	actualHash := digestEntry.hash
+	if actualHash != expectedHash {
+		t.Errorf("hash mismatch\nexpected: %v\nactual: %v\ntest file: %v",
+			expectedHash,
+			actualHash,
+			expectedPath)
 	}
 }
