@@ -38,7 +38,7 @@ func Compare(old, new digest.Digest) Diff {
 	}
 
 	// step 2: added files
-	for path, _ := range *new.Entries {
+	for path := range *new.Entries {
 		if _, oldExists := (*old.Entries)[path]; !oldExists {
 			diffEntries[path] = diffEntry{
 				file:   path,

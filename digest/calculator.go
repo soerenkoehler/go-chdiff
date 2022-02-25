@@ -76,18 +76,7 @@ func (context digestContext) processDir(dir string) {
 }
 
 func (context digestContext) processFile(file string) {
-	info, err := os.Lstat(file)
-	if err != nil {
-		log.Printf("[E]: %s\n", err)
-		return
-	}
-
 	relativePath, err := filepath.Rel(context.rootPath, file)
-	if err != nil {
-		log.Printf("[E]: %s\n", err)
-		return
-	}
-
 	if err != nil {
 		log.Printf("[E]: %s\n", err)
 		return
@@ -105,9 +94,7 @@ func (context digestContext) processFile(file string) {
 	io.Copy(hash, input)
 
 	context.digest <- digestEntry{
-		file:    relativePath,
-		Hash:    hex.EncodeToString(hash.Sum(nil)),
-		size:    info.Size(),
-		modTime: info.ModTime(),
+		file: relativePath,
+		Hash: hex.EncodeToString(hash.Sum(nil)),
 	}
 }
