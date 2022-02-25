@@ -106,7 +106,7 @@ func (context digestContext) processFile(file string) {
 
 	context.digest <- digestEntry{
 		file:    relativePath,
-		hash:    hex.EncodeToString(hash.Sum(nil)),
+		Hash:    hex.EncodeToString(hash.Sum(nil)),
 		size:    info.Size(),
 		modTime: info.ModTime(),
 	}

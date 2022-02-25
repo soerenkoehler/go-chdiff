@@ -75,7 +75,14 @@ func TestRunSuite(t *testing.T) {
 				Print(mock.StdOut, Compare(makeDigests(t)))
 
 				expect(t,
-					[]string{}, 0, 0, 0, 0)
+					[]string{
+						"- f0",
+						"* f5",
+						"* f6",
+						"* f7",
+						"* f8",
+						"+ f9",
+					}, 4, 4, 1, 1)
 			},
 			"compare by size and time": func(t *testing.T) {},
 			"compare by size":          func(t *testing.T) {},
@@ -117,7 +124,7 @@ func makeDiff(t *testing.T, identical, modified, added, removed int32) Diff {
 	return result
 }
 
-func expect(t *testing.T, entries []string, identical, changed, added, removed int32) {
+func expect(t *testing.T, entries []string, identical, modified, added, removed int32) {
 	// for non-empty entries list ensure final newline
 	entriesText := strings.Join(append(entries, ""), "\n")
 
@@ -125,7 +132,7 @@ func expect(t *testing.T, entries []string, identical, changed, added, removed i
 		"Old: (%v) %v\nNew: (%v) %v\n%vIdentical: %v | Modified: %v | Added: %v | Removed: %v\n",
 		rootTimeStr1, rootPath1, rootTimeStr2, rootPath2,
 		entriesText,
-		identical, changed, added, removed)
+		identical, modified, added, removed)
 
 	actual := mock.StdOut.String()
 
