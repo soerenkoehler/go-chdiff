@@ -7,10 +7,8 @@ import (
 )
 
 type digestEntry struct {
-	file    string
-	Hash    string
-	size    int64
-	modTime time.Time
+	file string
+	Hash string
 }
 
 type digestEntries map[string]digestEntry
@@ -33,15 +31,12 @@ func NewDigest(
 
 func (digest Digest) AddNewEntry(
 	file string,
-	hash string,
-	size int64,
-	time time.Time) Digest {
+	hash string) Digest {
 
 	return digest.AddEntry(digestEntry{
-		file:    file,
-		Hash:    hash,
-		size:    size,
-		modTime: time})
+		file: file,
+		Hash: hash,
+	})
 }
 
 func (digest Digest) AddEntry(entry digestEntry) Digest {

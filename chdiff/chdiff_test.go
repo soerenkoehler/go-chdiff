@@ -21,10 +21,10 @@ var (
 
 	mockDigestLoaded = digest.
 				NewDigest("dir_a", time.Now()).
-				AddNewEntry("a", "hashA", 1, time.Unix(1, 0))
+				AddNewEntry("a", "hashA")
 	mockDigestCalculated = digest.
 				NewDigest("dir_b", time.Now()).
-				AddNewEntry("b", "hashB", 2, time.Unix(2, 0))
+				AddNewEntry("b", "hashB")
 	mockDiffResult = diff.Diff{}
 )
 
