@@ -15,21 +15,13 @@ import (
 const (
 	rootPath1    = "/path/to/digestfile"
 	rootPath2    = "/path/to/dir"
-	fileSize1    = 1234
-	fileSize2    = 2345
-	fileHash1    = "hash1"
-	fileHash2    = "hash2"
 	rootTimeStr1 = "2020-03-04 16:17:18"
 	rootTimeStr2 = "2022-01-02 13:14:15"
-	fileTimeStr1 = "1999-10-20 16:17:18"
-	fileTimeStr2 = "1999-11-21 13:14:15"
+	fileHash1    = "hash1"
+	fileHash2    = "hash2"
 )
 
-var (
-	mock Registry
-	// rootTime1, rootTime2 time.Time
-	// fileTime1, fileTime2 time.Time
-)
+var mock Registry
 
 func TestRunSuite(t *testing.T) {
 	testutil.RunSuite(t,
@@ -123,7 +115,7 @@ func makeDiff(t *testing.T, identical, modified, added, removed int32) Diff {
 }
 
 func expect(t *testing.T, entries []string, identical, modified, added, removed int32) {
-	// for non-empty entries list ensure final newline
+	// for non-empty entries list require a final newline
 	entriesText := strings.Join(append(entries, ""), "\n")
 
 	expected := fmt.Sprintf(
