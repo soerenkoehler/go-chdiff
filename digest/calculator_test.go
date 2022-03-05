@@ -1,8 +1,6 @@
 package digest
 
 import (
-	"crypto/sha256"
-	"crypto/sha512"
 	"path"
 	"testing"
 
@@ -33,7 +31,7 @@ func TestDigest256(t *testing.T) {
 		size: 256,
 		seed: 1,
 		hash: "a6452fbd8c12f8df622c1ca4c567f966801fb56442aca03b4e1303e7a412a9d5",
-	}}, sha256.New)
+	}}, "SHA256")
 }
 
 func TestDigest512(t *testing.T) {
@@ -52,15 +50,15 @@ func TestDigest512(t *testing.T) {
 		size: 256,
 		seed: 1,
 		hash: "f3f00e46e5dc3819b8268afedb1221f25a4c29d3223979ede1df107155cc75bd427a5795b820fbd83fd4785899cb9de201b770a2c88a3bed90be37e82156e10b",
-	}}, sha512.New)
+	}}, "SHA512")
 }
 
 func verifyDigest(
 	t *testing.T,
 	data []testCase,
-	hashFactory HashFactory) {
+	algorithm string) {
 
-	digest := Calculate(createData(t, data), hashFactory)
+	digest := Calculate(createData(t, data), algorithm)
 
 	if len(*digest.Entries) != len(data) {
 		t.Fatal("Digest size must match number of input data points")

@@ -1,7 +1,6 @@
 package chdiff
 
 import (
-	"crypto/sha256"
 	"io"
 	"path"
 	"path/filepath"
@@ -33,14 +32,14 @@ func TestRunSuite(t *testing.T) {
 		func(t *testing.T) {
 			mock = NewRegistry(t)
 			mockDependencies = ChdiffDependencies{
-				mockReader,
-				mockWriter,
-				mockCalculator,
-				mockComparator,
-				mockPrinter,
-				mock.StdOut,
-				mock.StdErr,
-				func(e int) { mock.Register("exit", e) }}
+				DigestRead:      mockReader,
+				DigestWrite:     mockWriter,
+				DigestCalculate: mockCalculator,
+				DigestCompare:   mockComparator,
+				DiffPrint:       mockPrinter,
+				Stdout:          mock.StdOut,
+				Stderr:          mock.StdErr,
+				KongExit:        func(e int) { mock.Register("exit", e) }}
 		},
 		nil,
 		testutil.Suite{
@@ -58,30 +57,31 @@ func TestRunSuite(t *testing.T) {
 				testDigestVerify(t,
 					[]string{"", "v"},
 					".",
-					"out.txt",
+					".chdiff.SHA256.txt",
 					"SHA256")
 			},
 			"verify with path": func(t *testing.T) {
 				testDigestVerify(t,
 					[]string{"", "v", "x"},
 					"x",
-					"out.txt",
+					".chdiff.SHA256.txt",
 					"SHA256")
 			},
 			"create without path": func(t *testing.T) {
 				testDigestCreate(t,
 					[]string{"", "c"},
 					".",
-					"out.txt",
+					".chdiff.SHA256.txt",
 					"SHA256")
 			},
 			"create with path": func(t *testing.T) {
 				testDigestCreate(t,
 					[]string{"", "c", "x"},
 					"x",
-					"out.txt",
+					".chdiff.SHA256.txt",
 					"SHA256")
-			}})
+			},
+		})
 }
 
 func testErrorMessage(
@@ -110,7 +110,7 @@ func testDigestVerify(
 
 	mock.
 		Verify("read", Is(absDigestPath)).
-		Verify("calculate", Is(absDataPath), IsFunc(sha256.New)).
+		Verify("calculate", Is(absDataPath), Is(algorithm)).
 		Verify("compare", Is(mockDigestLoaded), Is(mockDigestCalculated)).
 		Verify("print", Is(mockDiffResult)).
 		NoMoreInvocations()
@@ -122,13 +122,12 @@ func testDigestCreate(
 	dataPath, digestPath, algorithm string) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
-	absDigestPath := path.Join(absDataPath, digestPath)
 
 	Chdiff("TEST", args, mockDependencies)
 
 	mock.
-		Verify("calculate", Is(absDataPath), IsFunc(sha256.New)).
-		Verify("write", Is(absDigestPath), Is(mockDigestCalculated)).
+		Verify("calculate", Is(absDataPath), Is(algorithm)).
+		Verify("write", Is(mockDigestCalculated)).
 		NoMoreInvocations()
 }
 
@@ -137,13 +136,13 @@ func mockReader(path string) (digest.Digest, error) {
 	return mockDigestLoaded, nil
 }
 
-func mockWriter(path string, digest digest.Digest) error {
-	mock.Register("write", path, digest)
+func mockWriter(digest digest.Digest) error {
+	mock.Register("write", digest)
 	return nil
 }
 
-func mockCalculator(path string, hashFactory digest.HashFactory) digest.Digest {
-	mock.Register("calculate", path, hashFactory)
+func mockCalculator(path, algorithm string) digest.Digest {
+	mock.Register("calculate", path, algorithm)
 	return mockDigestCalculated
 }
 

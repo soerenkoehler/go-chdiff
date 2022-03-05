@@ -1,15 +1,27 @@
 package digest
 
+import (
+	"fmt"
+)
+
 type Reader func(string) (Digest, error)
 
-type Writer func(string, Digest) error
+type Writer func(Digest) error
 
 func Load(digestFile string) (Digest, error) {
 	// TODO
 	return Digest{}, nil
 }
 
-func Save(digestFile string, digest Digest) error {
+func Save(digest Digest) error {
+	return save(DefaultDigestFile(digest.Location.Path, digest.Algorithm), digest)
+}
+
+func DefaultDigestFile(path, algorithm string) string {
+	return fmt.Sprintf("%v/.chdiff.%v.txt", path, algorithm)
+}
+
+func save(file string, digest Digest) error {
 	// TODO
 	return nil
 }
