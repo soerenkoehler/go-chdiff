@@ -17,13 +17,13 @@ func Save(digest Digest) error {
 	return save(DefaultDigestFile(digest.Location.Path, digest.Algorithm), digest)
 }
 
-func DefaultDigestFile(path, algorithm string) string {
-	return fmt.Sprintf("%v/.chdiff.%v.txt", path, algorithm)
-}
-
 func save(file string, digest Digest) error {
 	// TODO
 	return nil
+}
+
+func DefaultDigestFile(path, algorithm string) string {
+	return fmt.Sprintf("%v/.chdiff.%v.txt", path, algorithm)
 }
 
 // TODO

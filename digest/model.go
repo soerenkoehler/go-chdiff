@@ -19,27 +19,16 @@ type Digest struct {
 	Entries   *digestEntries
 }
 
-// TODO public only for tests => create test data from file
-func NewDigest(
-	path string,
+func newDigest(
+	path, algorithm string,
 	time time.Time) Digest {
 
 	return Digest{
 		Location: common.Location{
 			Path: path,
 			Time: time},
-		Entries: &digestEntries{}}
-}
-
-// TODO public only for tests => create test data from file
-func (digest Digest) AddNewEntry(
-	file string,
-	hash string) Digest {
-
-	return digest.addEntry(digestEntry{
-		file: file,
-		Hash: hash,
-	})
+		Algorithm: algorithm,
+		Entries:   &digestEntries{}}
 }
 
 func (digest Digest) addEntry(entry digestEntry) Digest {

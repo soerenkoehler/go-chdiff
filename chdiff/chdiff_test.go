@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
@@ -18,13 +17,9 @@ var (
 	mock             Registry
 	mockDependencies ChdiffDependencies
 
-	mockDigestLoaded = digest.
-				NewDigest("dir_a", time.Now()).
-				AddNewEntry("a", "hashA")
-	mockDigestCalculated = digest.
-				NewDigest("dir_b", time.Now()).
-				AddNewEntry("b", "hashB")
-	mockDiffResult = diff.Diff{}
+	mockDigestLoaded     = digest.Digest{}
+	mockDigestCalculated = digest.Digest{}
+	mockDiffResult       = diff.Diff{}
 )
 
 func TestRunSuite(t *testing.T) {
