@@ -1,7 +1,10 @@
 package digest
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"io"
 	"log"
@@ -14,23 +17,21 @@ import (
 	"github.com/soerenkoehler/go-chdiff/util"
 )
 
-type HashFactory func() hash.Hash
-
-type Calculator func(string, HashFactory) Digest
+type Calculator func(string, string) Digest
 
 type digestContext struct {
-	rootPath    string
-	hashFactory HashFactory
-	waitGroup   *sync.WaitGroup
-	digest      chan digestEntry
+	rootPath  string
+	algorithm string
+	waitGroup *sync.WaitGroup
+	digest    chan digestEntry
 }
 
-func Calculate(rootPath string, hashFactory HashFactory) Digest {
+func Calculate(rootPath, algorithm string) Digest {
 	context := digestContext{
-		rootPath:    rootPath,
-		hashFactory: hashFactory,
-		waitGroup:   &sync.WaitGroup{},
-		digest:      make(chan digestEntry),
+		rootPath:  rootPath,
+		algorithm: algorithm,
+		waitGroup: &sync.WaitGroup{},
+		digest:    make(chan digestEntry),
 	}
 
 	go func() {
@@ -41,7 +42,7 @@ func Calculate(rootPath string, hashFactory HashFactory) Digest {
 
 	result := NewDigest(rootPath, time.Now())
 	for entry := range context.digest {
-		result.AddEntry(entry)
+		result.addEntry(entry)
 	}
 
 	return result
@@ -90,11 +91,21 @@ func (context digestContext) processFile(file string) {
 
 	defer input.Close()
 
-	hash := context.hashFactory()
+	hash := getNewHash(context.algorithm)
 	io.Copy(hash, input)
 
 	context.digest <- digestEntry{
 		file: relativePath,
 		Hash: hex.EncodeToString(hash.Sum(nil)),
 	}
+}
+
+func getNewHash(algorithm string) hash.Hash {
+	switch algorithm {
+	case "SHA256":
+		return sha256.New()
+	case "SHA512":
+		return sha512.New()
+	}
+	panic(fmt.Errorf("invalid hash algorithm %v", algorithm))
 }

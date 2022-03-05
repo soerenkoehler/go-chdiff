@@ -1,14 +1,10 @@
 package chdiff
 
 import (
-	"crypto/sha256"
-	"crypto/sha512"
 	_ "embed"
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"path"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/go-chdiff/diff"
@@ -65,16 +61,17 @@ func Chdiff(
 }
 
 func (cmd *CmdCreate) Run(deps ChdiffDependencies) error {
-	deps.DigestWrite(
-		path.Join(cli.Create.Path, "out.txt"),
+	return deps.DigestWrite(
 		deps.DigestCalculate(
 			cli.Create.Path,
-			getNewHash(cli.Create.Algorithm)))
-	return nil
+			cli.Create.Algorithm))
 }
 
 func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
-	oldDigest, err := deps.DigestRead(path.Join(cli.Verify.Path, "out.txt"))
+	oldDigest, err := deps.DigestRead(
+		digest.DefaultDigestFile(
+			cli.Verify.Path,
+			cli.Verify.Algorithm))
 	if err == nil {
 		deps.DiffPrint(
 			deps.Stdout,
@@ -82,17 +79,7 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 				oldDigest,
 				deps.DigestCalculate(
 					cli.Verify.Path,
-					getNewHash(cli.Verify.Algorithm))))
+					cli.Verify.Algorithm)))
 	}
 	return err
-}
-
-func getNewHash(algorithm string) digest.HashFactory {
-	switch algorithm {
-	case "SHA256":
-		return sha256.New
-	case "SHA512":
-		return sha512.New
-	}
-	panic(fmt.Errorf("invalid hash algorithm %v", algorithm))
 }
