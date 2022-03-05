@@ -132,25 +132,13 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 }
 
 func makeDigests(t *testing.T) (digest.Digest, digest.Digest) {
-	d1 := digest.NewDigest(rootPath1, parseTime(t, rootTimeStr1)).
-		AddNewEntry("f0", fileHash1).
-		AddNewEntry("f1", fileHash1).
-		AddNewEntry("f2", fileHash1).
-		AddNewEntry("f3", fileHash1).
-		AddNewEntry("f4", fileHash1).
-		AddNewEntry("f5", fileHash1).
-		AddNewEntry("f6", fileHash1).
-		AddNewEntry("f7", fileHash1).
-		AddNewEntry("f8", fileHash1)
-	d2 := digest.NewDigest(rootPath2, parseTime(t, rootTimeStr2)).
-		AddNewEntry("f1", fileHash1).
-		AddNewEntry("f2", fileHash1).
-		AddNewEntry("f3", fileHash1).
-		AddNewEntry("f4", fileHash1).
-		AddNewEntry("f5", fileHash2).
-		AddNewEntry("f6", fileHash2).
-		AddNewEntry("f7", fileHash2).
-		AddNewEntry("f8", fileHash2).
-		AddNewEntry("f9", fileHash1)
+	d1, err := digest.Load("../testdata/diff/comparator/digest-old.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d2, err := digest.Load("../testdata/diff/comparator/digest-new.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
 	return d1, d2
 }
