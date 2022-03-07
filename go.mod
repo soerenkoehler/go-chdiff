@@ -3,7 +3,7 @@ module github.com/soerenkoehler/go-chdiff
 go 1.17
 
 require (
-	github.com/alecthomas/kong v0.4.0
+	github.com/alecthomas/kong v0.4.1
 	github.com/soerenkoehler/go-testutils v0.0.2
 )
 
