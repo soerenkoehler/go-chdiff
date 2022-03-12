@@ -23,7 +23,7 @@ type digestContext struct {
 	rootPath  string
 	algorithm string
 	waitGroup *sync.WaitGroup
-	digest    chan digestEntry
+	digest    chan DigestEntry
 }
 
 func Calculate(rootPath, algorithm string) Digest {
@@ -31,7 +31,7 @@ func Calculate(rootPath, algorithm string) Digest {
 		rootPath:  rootPath,
 		algorithm: algorithm,
 		waitGroup: &sync.WaitGroup{},
-		digest:    make(chan digestEntry),
+		digest:    make(chan DigestEntry),
 	}
 
 	go func() {
@@ -94,8 +94,8 @@ func (context digestContext) processFile(file string) {
 	hash := getNewHash(context.algorithm)
 	io.Copy(hash, input)
 
-	context.digest <- digestEntry{
-		file: relativePath,
+	context.digest <- DigestEntry{
+		File: relativePath,
 		Hash: hex.EncodeToString(hash.Sum(nil)),
 	}
 }

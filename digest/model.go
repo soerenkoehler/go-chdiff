@@ -6,12 +6,12 @@ import (
 	"github.com/soerenkoehler/go-chdiff/common"
 )
 
-type digestEntry struct {
-	file string
+type DigestEntry struct {
+	File string
 	Hash string
 }
 
-type digestEntries map[string]digestEntry
+type digestEntries map[string]DigestEntry
 
 type Digest struct {
 	Location  common.Location
@@ -31,9 +31,9 @@ func newDigest(
 		Entries:   &digestEntries{}}
 }
 
-func (digest Digest) addEntry(entry digestEntry) Digest {
+func (digest Digest) addEntry(entry DigestEntry) Digest {
 
-	(*digest.Entries)[entry.file] = entry
+	(*digest.Entries)[entry.File] = entry
 
 	return digest
 }

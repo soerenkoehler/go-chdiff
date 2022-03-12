@@ -1,4 +1,4 @@
-package diff
+package diff_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/soerenkoehler/go-chdiff/common"
+	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
 	. "github.com/soerenkoehler/go-testutils/mockutil"
 	"github.com/soerenkoehler/go-testutils/testutil"
@@ -31,19 +32,19 @@ func TestRunSuite(t *testing.T) {
 		nil,
 		testutil.Suite{
 			"print empty diff": func(t *testing.T) {
-				Print(mock.StdOut, makeDiff(t, 0, 0, 0, 0))
+				diff.Print(mock.StdOut, makeDiff(t, 0, 0, 0, 0))
 
 				expect(t, []string{}, 0, 0, 0, 0)
 			},
 
 			"print diff with no changes": func(t *testing.T) {
-				Print(mock.StdOut, makeDiff(t, 2, 0, 0, 0))
+				diff.Print(mock.StdOut, makeDiff(t, 2, 0, 0, 0))
 
 				expect(t, []string{}, 2, 0, 0, 0)
 			},
 
 			"print diff with changes": func(t *testing.T) {
-				Print(mock.StdOut, makeDiff(t, 0, 3, 5, 7))
+				diff.Print(mock.StdOut, makeDiff(t, 0, 3, 5, 7))
 
 				expect(t, []string{
 					"* relPath0",
@@ -64,7 +65,7 @@ func TestRunSuite(t *testing.T) {
 				}, 0, 3, 5, 7)
 			},
 			"compare by hash": func(t *testing.T) {
-				Print(mock.StdOut, Compare(makeDigests(t)))
+				diff.Print(mock.StdOut, diff.Compare(makeDigests(t)))
 
 				expect(t,
 					[]string{
@@ -87,30 +88,30 @@ func parseTime(t *testing.T, s string) time.Time {
 	return time
 }
 
-func makeDiff(t *testing.T, identical, modified, added, removed int32) Diff {
-	result := Diff{
-		locationA: common.Location{
+func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff {
+	result := diff.Diff{
+		LocationA: common.Location{
 			Path: rootPath1,
 			Time: parseTime(t, rootTimeStr1)},
-		locationB: common.Location{
+		LocationB: common.Location{
 			Path: rootPath2,
 			Time: parseTime(t, rootTimeStr2)},
-		entries: diffEntries{}}
+		Entries: diff.DiffEntries{}}
 	entry := 0
-	add := func(count int32, status diffStatus) {
+	add := func(count int32, status diff.DiffStatus) {
 		for ; count > 0; count-- {
 			relPath := fmt.Sprintf("relPath%d", entry)
-			result.entries[relPath] = diffEntry{
-				file:   relPath,
-				status: status,
+			result.Entries[relPath] = diff.DiffEntry{
+				File:   relPath,
+				Status: status,
 			}
 			entry++
 		}
 	}
-	add(identical, Identical)
-	add(modified, Modified)
-	add(added, Added)
-	add(removed, Removed)
+	add(identical, diff.Identical)
+	add(modified, diff.Modified)
+	add(added, diff.Added)
+	add(removed, diff.Removed)
 	return result
 }
 

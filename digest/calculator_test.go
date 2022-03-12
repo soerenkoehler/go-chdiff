@@ -1,9 +1,10 @@
-package digest
+package digest_test
 
 import (
 	"path"
 	"testing"
 
+	"github.com/soerenkoehler/go-chdiff/digest"
 	"github.com/soerenkoehler/go-testutils/datautil"
 	// "github.com/google/go-cmp/cmp"
 )
@@ -58,7 +59,7 @@ func verifyDigest(
 	data []testCase,
 	algorithm string) {
 
-	digest := Calculate(createData(t, data), algorithm)
+	digest := digest.Calculate(createData(t, data), algorithm)
 
 	if len(*digest.Entries) != len(data) {
 		t.Fatal("Digest size must match number of input data points")
@@ -86,10 +87,10 @@ func createData(
 func verifyDataPoint(
 	t *testing.T,
 	dataPoint testCase,
-	digestEntry digestEntry) {
+	digestEntry digest.DigestEntry) {
 
 	expectedPath := dataPoint.path
-	actualPath := digestEntry.file
+	actualPath := digestEntry.File
 	if actualPath != expectedPath {
 		t.Errorf("DigestEntry.file (%v) must match Digest map key (%v)",
 			actualPath,
