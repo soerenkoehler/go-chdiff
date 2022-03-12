@@ -2,6 +2,7 @@ package digest
 
 import (
 	"fmt"
+	"os"
 )
 
 type Reader func(string) (Digest, error)
@@ -9,8 +10,9 @@ type Reader func(string) (Digest, error)
 type Writer func(Digest) error
 
 func Load(digestFile string) (Digest, error) {
-	// TODO
-	return Digest{}, nil
+	digest := Digest{}
+	_, err := os.Open(digestFile)
+	return digest, err
 }
 
 func Save(digest Digest) error {

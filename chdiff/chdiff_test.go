@@ -1,4 +1,4 @@
-package chdiff
+package chdiff_test
 
 import (
 	"io"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/soerenkoehler/go-chdiff/chdiff"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
 	. "github.com/soerenkoehler/go-testutils/mockutil"
@@ -15,7 +16,7 @@ import (
 
 var (
 	mock             Registry
-	mockDependencies ChdiffDependencies
+	mockDependencies chdiff.ChdiffDependencies
 
 	mockDigestLoaded     = digest.Digest{}
 	mockDigestCalculated = digest.Digest{}
@@ -26,7 +27,7 @@ func TestRunSuite(t *testing.T) {
 	testutil.RunSuite(t,
 		func(t *testing.T) {
 			mock = NewRegistry(t)
-			mockDependencies = ChdiffDependencies{
+			mockDependencies = chdiff.ChdiffDependencies{
 				DigestRead:      mockReader,
 				DigestWrite:     mockWriter,
 				DigestCalculate: mockCalculator,
@@ -84,7 +85,7 @@ func testErrorMessage(
 	args []string,
 	msg string) {
 
-	Chdiff(
+	chdiff.Chdiff(
 		"TEST",
 		args,
 		mockDependencies)
@@ -101,7 +102,7 @@ func testDigestVerify(
 	absDataPath, _ := filepath.Abs(dataPath)
 	absDigestPath := path.Join(absDataPath, digestPath)
 
-	Chdiff("TEST", args, mockDependencies)
+	chdiff.Chdiff("TEST", args, mockDependencies)
 
 	mock.
 		Verify("read", Is(absDigestPath)).
@@ -118,7 +119,7 @@ func testDigestCreate(
 
 	absDataPath, _ := filepath.Abs(dataPath)
 
-	Chdiff("TEST", args, mockDependencies)
+	chdiff.Chdiff("TEST", args, mockDependencies)
 
 	mock.
 		Verify("calculate", Is(absDataPath), Is(algorithm)).

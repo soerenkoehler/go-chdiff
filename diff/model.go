@@ -2,24 +2,24 @@ package diff
 
 import "github.com/soerenkoehler/go-chdiff/common"
 
-type diffStatus int32
+type DiffStatus int32
 
 const (
-	Identical diffStatus = iota
+	Identical DiffStatus = iota
 	Modified
 	Added
 	Removed
 )
 
-type diffEntry struct {
-	file   string
-	status diffStatus
+type DiffEntry struct {
+	File   string
+	Status DiffStatus
 }
 
-type diffEntries map[string]diffEntry
+type DiffEntries map[string]DiffEntry
 
 type Diff struct {
-	locationA common.Location
-	locationB common.Location
-	entries   diffEntries
+	LocationA common.Location
+	LocationB common.Location
+	Entries   DiffEntries
 }
