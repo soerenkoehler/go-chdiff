@@ -127,8 +127,8 @@ func testDigestCreate(
 		NoMoreInvocations()
 }
 
-func mockReader(path string) (digest.Digest, error) {
-	mock.Register("read", path)
+func mockReader(path, algorithm string) (digest.Digest, error) {
+	mock.Register("read", path, algorithm)
 	return mockDigestLoaded, nil
 }
 

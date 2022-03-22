@@ -96,15 +96,15 @@ func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff
 		LocationB: common.Location{
 			Path: rootPath2,
 			Time: parseTime(t, rootTimeStr2)},
-		Entries: diff.DiffEntries{}}
+		Entries: common.Set[diff.DiffEntry]{}}
 	entry := 0
 	add := func(count int32, status diff.DiffStatus) {
 		for ; count > 0; count-- {
 			relPath := fmt.Sprintf("relPath%d", entry)
-			result.Entries[relPath] = diff.DiffEntry{
+			result.Entries.Put(diff.DiffEntry{
 				File:   relPath,
 				Status: status,
-			}
+			})
 			entry++
 		}
 	}
@@ -133,11 +133,11 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 }
 
 func makeDigests(t *testing.T) (digest.Digest, digest.Digest) {
-	d1, err := digest.Load("../testdata/diff/comparator/digest-old.txt")
+	d1, err := digest.Load("../testdata/diff/comparator/digest-old.txt", "algo")
 	if err != nil {
 		t.Fatal(err)
 	}
-	d2, err := digest.Load("../testdata/diff/comparator/digest-new.txt")
+	d2, err := digest.Load("../testdata/diff/comparator/digest-new.txt", "algo")
 	if err != nil {
 		t.Fatal(err)
 	}

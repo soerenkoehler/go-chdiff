@@ -5,18 +5,24 @@ import (
 	"os"
 )
 
-type Reader func(string) (Digest, error)
+type Reader func(string, string) (Digest, error)
 
 type Writer func(Digest) error
 
-func Load(digestFile string) (Digest, error) {
+func Load(path, algorithm string) (Digest, error) {
+	return load(defaultDigestFile(path, algorithm))
+}
+
+func load(digestFile string) (Digest, error) {
 	digest := Digest{}
 	_, err := os.Open(digestFile)
 	return digest, err
 }
 
 func Save(digest Digest) error {
-	return save(DefaultDigestFile(digest.Location.Path, digest.Algorithm), digest)
+	return save(
+		defaultDigestFile(digest.Location.Path, digest.Algorithm),
+		digest)
 }
 
 func save(file string, digest Digest) error {
@@ -24,7 +30,7 @@ func save(file string, digest Digest) error {
 	return nil
 }
 
-func DefaultDigestFile(path, algorithm string) string {
+func defaultDigestFile(path, algorithm string) string {
 	return fmt.Sprintf("%v/.chdiff.%v.txt", path, algorithm)
 }
 

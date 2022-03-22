@@ -11,7 +11,9 @@ type DigestEntry struct {
 	Hash string
 }
 
-type digestEntries map[string]DigestEntry
+type digestEntries struct {
+	common.Set[DigestEntry]
+}
 
 type Digest struct {
 	Location  common.Location
@@ -19,7 +21,7 @@ type Digest struct {
 	Entries   *digestEntries
 }
 
-func newDigest(
+func NewDigest(
 	path, algorithm string,
 	time time.Time) Digest {
 
@@ -33,6 +35,7 @@ func newDigest(
 
 func (digest Digest) addEntry(entry DigestEntry) Digest {
 
+	digest.Entries.Put(entry)
 	(*digest.Entries)[entry.File] = entry
 
 	return digest

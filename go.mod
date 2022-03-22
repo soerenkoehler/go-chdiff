@@ -1,9 +1,12 @@
 module github.com/soerenkoehler/go-chdiff
 
-go 1.17
+go 1.18
 
 require (
 	github.com/alecthomas/kong v0.4.1
+)
+
+require (
 	github.com/google/go-cmp v0.5.7
 	github.com/soerenkoehler/go-testutils v0.0.2
 )

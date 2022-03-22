@@ -69,9 +69,8 @@ func (cmd *CmdCreate) Run(deps ChdiffDependencies) error {
 
 func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 	oldDigest, err := deps.DigestRead(
-		digest.DefaultDigestFile(
-			cli.Verify.Path,
-			cli.Verify.Algorithm))
+		cli.Verify.Path,
+		cli.Verify.Algorithm)
 	if err == nil {
 		deps.DiffPrint(
 			deps.Stdout,
