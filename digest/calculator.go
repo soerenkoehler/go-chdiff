@@ -40,7 +40,7 @@ func Calculate(rootPath, algorithm string) Digest {
 		close(context.digest)
 	}()
 
-	result := newDigest(rootPath, algorithm, time.Now())
+	result := NewDigest(rootPath, algorithm, time.Now())
 	for entry := range context.digest {
 		result.addEntry(entry)
 	}

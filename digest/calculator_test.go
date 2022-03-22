@@ -6,7 +6,6 @@ import (
 
 	"github.com/soerenkoehler/go-chdiff/digest"
 	"github.com/soerenkoehler/go-testutils/datautil"
-	// "github.com/google/go-cmp/cmp"
 )
 
 type testCase struct {

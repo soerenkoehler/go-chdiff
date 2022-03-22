@@ -16,10 +16,8 @@ type DiffEntry struct {
 	Status DiffStatus
 }
 
-type DiffEntries map[string]DiffEntry
-
 type Diff struct {
 	LocationA common.Location
 	LocationB common.Location
-	Entries   DiffEntries
+	Entries   common.Set[DiffEntry]
 }
