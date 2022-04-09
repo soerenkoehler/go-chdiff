@@ -65,7 +65,7 @@ func verifyDigest(
 	}
 
 	for _, dataPoint := range data {
-		verifyDataPoint(t, dataPoint, (*digest.Entries)[dataPoint.path])
+		verifyDataPoint(t, dataPoint, digest.Entries)
 	}
 }
 
@@ -86,18 +86,12 @@ func createData(
 func verifyDataPoint(
 	t *testing.T,
 	dataPoint testCase,
-	digestEntry digest.DigestEntry) {
+	hashes *digest.FileHashes) {
 
 	expectedPath := dataPoint.path
-	actualPath := digestEntry.File
-	if actualPath != expectedPath {
-		t.Errorf("DigestEntry.file (%v) must match Digest map key (%v)",
-			actualPath,
-			expectedPath)
-	}
-
 	expectedHash := dataPoint.hash
-	actualHash := digestEntry.Hash
+
+	actualHash := (*hashes)[expectedPath]
 	if actualHash != expectedHash {
 		t.Errorf("hash mismatch\nexpected: %v\nactual: %v\ntest file: %v",
 			expectedHash,

@@ -19,11 +19,18 @@ import (
 
 type Calculator func(string, string) Digest
 
+// TODO locale type like digestEntry
+
+type digestEntry struct {
+	file string
+	hash string
+}
+
 type digestContext struct {
 	rootPath  string
 	algorithm string
 	waitGroup *sync.WaitGroup
-	digest    chan DigestEntry
+	digest    chan digestEntry
 }
 
 func Calculate(rootPath, algorithm string) Digest {
@@ -31,7 +38,7 @@ func Calculate(rootPath, algorithm string) Digest {
 		rootPath:  rootPath,
 		algorithm: algorithm,
 		waitGroup: &sync.WaitGroup{},
-		digest:    make(chan DigestEntry),
+		digest:    make(chan digestEntry),
 	}
 
 	go func() {
@@ -42,7 +49,7 @@ func Calculate(rootPath, algorithm string) Digest {
 
 	result := NewDigest(rootPath, algorithm, time.Now())
 	for entry := range context.digest {
-		result.addEntry(entry)
+		(*result.Entries)[entry.file] = entry.hash
 	}
 
 	return result
@@ -94,9 +101,9 @@ func (context digestContext) processFile(file string) {
 	hash := getNewHash(context.algorithm)
 	io.Copy(hash, input)
 
-	context.digest <- DigestEntry{
-		File: relativePath,
-		Hash: hex.EncodeToString(hash.Sum(nil)),
+	context.digest <- digestEntry{
+		file: relativePath,
+		hash: hex.EncodeToString(hash.Sum(nil)),
 	}
 }
 

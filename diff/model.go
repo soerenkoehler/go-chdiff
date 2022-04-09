@@ -19,5 +19,5 @@ type DiffEntry struct {
 type Diff struct {
 	LocationA common.Location
 	LocationB common.Location
-	Entries   common.Set[DiffEntry]
+	Entries   map[string]DiffEntry
 }
