@@ -96,15 +96,15 @@ func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff
 		LocationB: common.Location{
 			Path: rootPath2,
 			Time: parseTime(t, rootTimeStr2)},
-		Entries: common.Set[diff.DiffEntry]{}}
+		Entries: map[string]diff.DiffEntry{}}
 	entry := 0
 	add := func(count int32, status diff.DiffStatus) {
 		for ; count > 0; count-- {
 			relPath := fmt.Sprintf("relPath%d", entry)
-			result.Entries.Put(diff.DiffEntry{
+			result.Entries[relPath] = diff.DiffEntry{
 				File:   relPath,
 				Status: status,
-			})
+			}
 			entry++
 		}
 	}
