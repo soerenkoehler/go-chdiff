@@ -9,4 +9,4 @@ require (
 	github.com/soerenkoehler/go-testutils v0.0.2
 )
 
-replace github.com/soerenkoehler/go-testutils => ../go-testutils
+// replace github.com/soerenkoehler/go-testutils => ../go-testutils
