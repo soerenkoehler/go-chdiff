@@ -16,6 +16,7 @@ func Load(path, algorithm string) (Digest, error) {
 func load(digestFile string) (Digest, error) {
 	digest := Digest{}
 	_, err := os.Open(digestFile)
+	// TODO load digest data
 	return digest, err
 }
 
@@ -26,7 +27,7 @@ func Save(digest Digest) error {
 }
 
 func save(file string, digest Digest) error {
-	// TODO
+	// TODO save digest data
 	return nil
 }
 
