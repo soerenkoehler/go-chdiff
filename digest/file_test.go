@@ -12,14 +12,14 @@ import (
 func TestLoadNonexistantFile(t *testing.T) {
 	_, err := digest.Load("../testdata/digest/file/path-without-digest", "algo")
 	fmt.Println(err)
-	if err.Error() != "open ../testdata/digest/file/path-without-digest/.chdiff.algo.txt: no such file or directory" {
+	if err == nil || err.Error() != "open ../testdata/digest/file/path-without-digest/.chdiff.algo.txt: no such file or directory" {
 		t.Fatal("expected: file not found error")
 	}
 }
 
 func TestLoad(t *testing.T) {
 	expected := digest.NewDigest("rootPath", "algo", time.Now())
-	actual, err := digest.Load("../testdata/digest/file", "algo")
+	actual, err := digest.Load("../testdata/digest/file/path-with-digest", "algo")
 	if err != nil {
 		t.Fatal(err)
 	}
