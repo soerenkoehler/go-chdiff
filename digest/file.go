@@ -1,22 +1,40 @@
 package digest
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/soerenkoehler/go-chdiff/util"
 )
+
+const SEPARATOR_TEXT = "  "
+const SEPARATOR_BINARY = " *"
 
 type Reader func(string, string) (Digest, error)
 
 type Writer func(Digest) error
 
 func Load(path, algorithm string) (Digest, error) {
-	return load(defaultDigestFile(path, algorithm))
+	if util.Stat(path).IsDir {
+		return load(defaultDigestFile(path, algorithm))
+	}
+	return load(path)
 }
 
 func load(digestFile string) (Digest, error) {
-	digest := Digest{}
-	_, err := os.Open(digestFile)
-	// TODO load digest data
+	digest := Digest{
+		Entries: &FileHashes{}}
+	input, err := os.Open(digestFile)
+	if err == nil {
+		lines := bufio.NewScanner(input)
+		for lines.Scan() {
+			normalized := strings.Replace(lines.Text(), SEPARATOR_TEXT, SEPARATOR_BINARY, 1)
+			tokens := strings.SplitN(normalized, SEPARATOR_BINARY, 2)
+			(*digest.Entries)[tokens[1]] = tokens[0]
+		}
+	}
 	return digest, err
 }
 

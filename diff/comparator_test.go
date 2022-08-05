@@ -70,12 +70,9 @@ func TestRunSuite(t *testing.T) {
 				expect(t,
 					[]string{
 						"- f0",
-						"* f5",
-						"* f6",
-						"* f7",
-						"* f8",
-						"+ f9",
-					}, 4, 4, 1, 1)
+						"* f2",
+						"+ f3",
+					}, 1, 1, 1, 1)
 			},
 		})
 }
