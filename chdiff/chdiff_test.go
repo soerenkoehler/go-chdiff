@@ -2,7 +2,6 @@ package chdiff_test
 
 import (
 	"io"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -100,12 +99,11 @@ func testDigestVerify(
 	dataPath, digestPath, algorithm string) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
-	absDigestPath := path.Join(absDataPath, digestPath)
 
 	chdiff.Chdiff("TEST", args, mockDependencies)
 
 	mock.
-		Verify("read", Is(absDigestPath)).
+		Verify("read", Is(absDataPath), Is(algorithm)).
 		Verify("calculate", Is(absDataPath), Is(algorithm)).
 		Verify("compare", Is(mockDigestLoaded), Is(mockDigestCalculated)).
 		Verify("print", Is(mockDiffResult)).

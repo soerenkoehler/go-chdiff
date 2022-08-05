@@ -1,3 +1,3 @@
-fileHash1 f1
-fileHash2 f2
-fileHash1 f3
+fileHash1 *f1
+fileHash2b *f2
+fileHash3 *f3
