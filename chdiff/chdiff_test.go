@@ -42,6 +42,8 @@ func TestRunSuite(t *testing.T) {
 				testErrorMessage(t,
 					[]string{""},
 					"error: expected one of \"create\",  \"verify\"\n")
+				// Attention: Kong's error message contains double space
+				// between commands
 			},
 			"unknown command": func(t *testing.T) {
 				testErrorMessage(t,
@@ -82,14 +84,15 @@ func TestRunSuite(t *testing.T) {
 func testErrorMessage(
 	t *testing.T,
 	args []string,
-	msg string) {
+	expected string) {
 
 	chdiff.Chdiff(
 		"TEST",
 		args,
 		mockDependencies)
-	if !strings.Contains(mock.StdErr.String(), msg) {
-		t.Errorf("no or incorrect error message")
+	actual := mock.StdErr.String()
+	if !strings.Contains(actual, expected) {
+		t.Errorf("\nexpected: %v\nactual: %v", expected, actual)
 	}
 }
 

@@ -2,6 +2,7 @@ package digest_test
 
 import (
 	"fmt"
+	"path"
 	"testing"
 	"time"
 
@@ -17,19 +18,15 @@ func TestLoadNonexistantFile(t *testing.T) {
 	}
 }
 
-func TestLoad(t *testing.T) {
-	expected := digest.NewDigest("rootPath", "algo", time.Now())
-	actual, err := digest.Load("../testdata/digest/file/path-with-digest", "algo")
+func TestSaveLoad(t *testing.T) {
+	path := path.Join(t.TempDir(), "rootPath")
+	expected := digest.NewDigest(path, "algo", time.Now())
+	digest.Save(expected)
+	actual, err := digest.Load(path, "algo")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !cmp.Equal(expected, actual) {
 		t.Fatal(cmp.Diff(expected, actual))
 	}
-}
-
-func TestSave(t *testing.T) {
-	// TODO
-	digest.NewDigest("rootPath", "algo", time.Now())
-	t.Fatal("TODO")
 }
