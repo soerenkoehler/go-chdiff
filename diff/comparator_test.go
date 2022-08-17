@@ -125,7 +125,7 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 	actual := mock.StdOut.String()
 
 	if actual != expected {
-		t.Fatalf("should output:\n%v\nbut got:\n%v", expected, actual)
+		t.Fatalf("expected:\n%v\nactual:\n%v", expected, actual)
 	}
 }
 
