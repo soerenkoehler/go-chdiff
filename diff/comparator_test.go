@@ -130,11 +130,11 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 }
 
 func makeDigests(t *testing.T) (digest.Digest, digest.Digest) {
-	d1, err := digest.Load("../testdata/diff/comparator/digest-old.txt", "algo")
+	d1, err := digest.Load("../testdata/diff/comparator/digest-old.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	d2, err := digest.Load("../testdata/diff/comparator/digest-new.txt", "algo")
+	d2, err := digest.Load("../testdata/diff/comparator/digest-new.txt")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,13 +15,21 @@ type Digest struct {
 }
 
 func NewDigest(
-	path, algorithm string,
-	time time.Time) Digest {
+	digestPath, algorithm string,
+	digestTime time.Time) Digest {
 
 	return Digest{
 		Location: common.Location{
-			Path: path,
-			Time: time},
+			Path: digestPath,
+			Time: time.Date(
+				digestTime.Local().Year(),
+				digestTime.Local().Month(),
+				digestTime.Local().Day(),
+				digestTime.Local().Hour(),
+				digestTime.Local().Minute(),
+				digestTime.Local().Second(),
+				0,
+				time.Local)},
 		Algorithm: algorithm,
 		Entries:   &FileHashes{}}
 }

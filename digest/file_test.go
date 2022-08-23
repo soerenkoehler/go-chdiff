@@ -1,8 +1,6 @@
 package digest_test
 
 import (
-	"fmt"
-	"path"
 	"testing"
 	"time"
 
@@ -11,18 +9,19 @@ import (
 )
 
 func TestLoadNonexistantFile(t *testing.T) {
-	_, err := digest.Load("../testdata/digest/file/path-without-digest", "algo")
-	fmt.Println(err)
-	if err == nil || err.Error() != "open ../testdata/digest/file/path-without-digest/.chdiff.algo.txt: no such file or directory" {
-		t.Fatal("expected: file not found error")
+	expectedError := "lstat ../testdata/digest/file/path-without-digest/.chdiff.txt: no such file or directory"
+	_, err := digest.Load("../testdata/digest/file/path-without-digest")
+	if err == nil || err.Error() != expectedError {
+		t.Fatalf("\nexpected: %v\n  actual: %v", expectedError, err)
 	}
 }
 
 func TestSaveLoad(t *testing.T) {
-	path := path.Join(t.TempDir(), "rootPath")
-	expected := digest.NewDigest(path, "algo", time.Now())
+	digestPath := t.TempDir()
+	digestTime := time.Now()
+	expected := digest.NewDigest(digestPath, "algo", digestTime)
 	digest.Save(expected)
-	actual, err := digest.Load(path, "algo")
+	actual, err := digest.Load(digestPath)
 	if err != nil {
 		t.Fatal(err)
 	}
