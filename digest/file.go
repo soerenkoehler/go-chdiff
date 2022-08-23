@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/soerenkoehler/go-chdiff/util"
@@ -16,22 +17,30 @@ type Reader func(string, string) (Digest, error)
 
 type Writer func(Digest) error
 
-func Load(path, algorithm string) (Digest, error) {
+func Load(path string) (Digest, error) {
 	if util.Stat(path).IsDir {
-		return load(defaultDigestFile(path, algorithm))
+		return load(path, defaultDigestFile(path))
 	}
-	return load(path)
+	return load(path, filepath.Dir(path))
 }
 
-func load(digestFile string) (Digest, error) {
-	digest := Digest{
-		Entries: &FileHashes{}}
+func load(digestPath, digestFile string) (Digest, error) {
+	digestFileInfo, err := os.Lstat(digestFile)
+	if err != nil {
+		return Digest{}, err
+	}
+
+	digest := NewDigest(digestPath, "todo", digestFileInfo.ModTime().Local())
+
 	input, err := os.Open(digestFile)
 	if err == nil {
 		lines := bufio.NewScanner(input)
 		for lines.Scan() {
 			normalized := strings.Replace(lines.Text(), SEPARATOR_TEXT, SEPARATOR_BINARY, 1)
 			tokens := strings.SplitN(normalized, SEPARATOR_BINARY, 2)
+			if len(tokens) != 2 {
+				return Digest{}, fmt.Errorf("invalid digest file")
+			}
 			(*digest.Entries)[tokens[1]] = tokens[0]
 		}
 	}
@@ -39,18 +48,25 @@ func load(digestFile string) (Digest, error) {
 }
 
 func Save(digest Digest) error {
-	return save(
-		defaultDigestFile(digest.Location.Path, digest.Algorithm),
-		digest)
+	return save(defaultDigestFile(digest.Location.Path), digest)
 }
 
-func save(file string, digest Digest) error {
+func save(digestFile string, digest Digest) error {
 	// TODO save digest data
+	output, err := os.Create(digestFile)
+	if err == nil {
+		for k, v := range *digest.Entries {
+			fmt.Fprintf(output, "%v *%v", k, v)
+		}
+		os.Chtimes(defaultDigestFile(digestFile),
+			digest.Location.Time,
+			digest.Location.Time)
+	}
 	return nil
 }
 
-func defaultDigestFile(path, algorithm string) string {
-	return fmt.Sprintf("%v/.chdiff.%v.txt", path, algorithm)
+func defaultDigestFile(path string) string {
+	return filepath.Join(path, ".chdiff.txt")
 }
 
 // TODO
