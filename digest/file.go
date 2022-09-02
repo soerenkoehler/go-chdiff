@@ -21,7 +21,7 @@ func Load(digestPath, digestFile string) (Digest, error) {
 		return Digest{}, err
 	}
 
-	digest := NewDigest(digestPath, "todo", digestFileInfo.ModTime().Local())
+	digest := NewDigest(digestPath, digestFileInfo.ModTime().Local())
 
 	input, err := os.Open(digestFile)
 	if err == nil {
@@ -38,10 +38,6 @@ func Load(digestPath, digestFile string) (Digest, error) {
 	return digest, err
 }
 
-// func Save(digest Digest) error {
-// 	return save(defaultDigestFile(digest.Location.Path), digest)
-// }
-
 func Save(digest Digest, digestFile string) error {
 	// TODO save digest data
 	output, err := os.Create(digestFile)
@@ -54,27 +50,6 @@ func Save(digest Digest, digestFile string) error {
 	return nil
 }
 
-func defaultDigestFile(path string) string {
+func DefaultDigestFile(path string) string {
 	return filepath.Join(path, ".chdiff.txt")
 }
-
-// TODO
-// func (digest Digest) sortedKeys() []string {
-// 	keys := make([]string, 0, len(digest))
-// 	for key := range digest {
-// 		keys = append(keys, key)
-// 	}
-// 	sort.Strings(keys)
-// 	return keys
-// }
-
-// TODO
-// func (entry DigestEntry) entryToString() string {
-// 	return fmt.Sprintf(
-// 		"# %d %s %s\n%s *%s\n",
-// 		entry.size,
-// 		entry.modTime.Local().Format("20060102-150405"),
-// 		entry.file,
-// 		entry.hash,
-// 		entry.file)
-// }

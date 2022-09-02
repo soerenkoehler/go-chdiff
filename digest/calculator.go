@@ -17,7 +17,7 @@ import (
 	"github.com/soerenkoehler/go-chdiff/util"
 )
 
-type Calculator func(string, string) Digest
+type Calculator func(rootPath, algorithm string) Digest
 
 // TODO locale type like digestEntry
 
@@ -47,7 +47,7 @@ func Calculate(rootPath, algorithm string) Digest {
 		close(context.digest)
 	}()
 
-	result := NewDigest(rootPath, algorithm, time.Now())
+	result := NewDigest(rootPath, time.Now())
 	for entry := range context.digest {
 		(*result.Entries)[entry.file] = entry.hash
 	}
