@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/soerenkoehler/go-chdiff/digest"
+	"github.com/soerenkoehler/go-chdiff/util"
 )
 
 func TestLoadNonexistantFile(t *testing.T) {
@@ -19,6 +20,7 @@ func TestLoadNonexistantFile(t *testing.T) {
 func TestSaveLoad(t *testing.T) {
 	digestPath := t.TempDir()
 	digestTime := time.Now()
+	digestFile:=
 	expected := digest.NewDigest(digestPath, "algo", digestTime)
 	digest.Save(expected)
 	actual, err := digest.Load(digestPath)

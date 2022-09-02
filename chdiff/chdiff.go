@@ -24,8 +24,9 @@ type CmdCreate struct{ cmdDigest }
 type CmdVerify struct{ cmdDigest }
 
 type cmdDigest struct {
-	Path      string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
-	Algorithm string `name:"alg" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
+	rootPath   string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
+	digestFile string `name:"file" aliases:"f" help:"Optional: Path to different location of the digest file."`
+	Algorithm  string `name:"algorithm" aliases:"a,algo" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
 }
 
 type ChdiffDependencies struct {
@@ -63,22 +64,23 @@ func Chdiff(
 func (cmd *CmdCreate) Run(deps ChdiffDependencies) error {
 	return deps.DigestWrite(
 		deps.DigestCalculate(
-			cli.Create.Path,
-			cli.Create.Algorithm))
+			cmd.rootPath,
+			cmd.Algorithm),
+		cmd.digestFile)
 }
 
 func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 	oldDigest, err := deps.DigestRead(
-		cli.Verify.Path,
-		cli.Verify.Algorithm)
+		cmd.rootPath,
+		cmd.digestFile)
 	if err == nil {
 		deps.DiffPrint(
 			deps.Stdout,
 			deps.DigestCompare(
 				oldDigest,
 				deps.DigestCalculate(
-					cli.Verify.Path,
-					cli.Verify.Algorithm)))
+					cmd.rootPath,
+					cmd.Algorithm)))
 	}
 	return err
 }
