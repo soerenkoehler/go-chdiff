@@ -6,25 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/soerenkoehler/go-chdiff/util"
 )
 
 const SEPARATOR_TEXT = "  "
 const SEPARATOR_BINARY = " *"
 
-type Reader func(string, string) (Digest, error)
+type Reader func(digestRootPath, digestFile string) (Digest, error)
 
-type Writer func(Digest) error
+type Writer func(digest Digest, digestFile string) error
 
-func Load(path string) (Digest, error) {
-	if util.Stat(path).IsDir {
-		return load(path, defaultDigestFile(path))
-	}
-	return load(path, filepath.Dir(path))
-}
-
-func load(digestPath, digestFile string) (Digest, error) {
+func Load(digestPath, digestFile string) (Digest, error) {
 	digestFileInfo, err := os.Lstat(digestFile)
 	if err != nil {
 		return Digest{}, err
@@ -47,20 +38,18 @@ func load(digestPath, digestFile string) (Digest, error) {
 	return digest, err
 }
 
-func Save(digest Digest) error {
-	return save(defaultDigestFile(digest.Location.Path), digest)
-}
+// func Save(digest Digest) error {
+// 	return save(defaultDigestFile(digest.Location.Path), digest)
+// }
 
-func save(digestFile string, digest Digest) error {
+func Save(digest Digest, digestFile string) error {
 	// TODO save digest data
 	output, err := os.Create(digestFile)
 	if err == nil {
 		for k, v := range *digest.Entries {
 			fmt.Fprintf(output, "%v *%v", k, v)
 		}
-		os.Chtimes(defaultDigestFile(digestFile),
-			digest.Location.Time,
-			digest.Location.Time)
+		os.Chtimes(digestFile, digest.Location.Time, digest.Location.Time)
 	}
 	return nil
 }

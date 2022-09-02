@@ -14,15 +14,17 @@ import (
 )
 
 const (
-	rootPath1    = "/path/to/digestfile"
-	rootPath2    = "/path/to/dir"
-	rootTimeStr1 = "2020-03-04 16:17:18"
-	rootTimeStr2 = "2022-01-02 13:14:15"
-	fileHash1    = "hash1"
-	fileHash2    = "hash2"
+	digestPath1 = "/path/to/digestfile"
+	digestPath2 = "/path/to/dir"
+	fileHash1   = "hash1"
+	fileHash2   = "hash2"
 )
 
-var mock Registry
+var (
+	digestTime1 time.Time = time.Date(2020, 3, 4, 16, 17, 18, 0, time.Local)
+	digestTime2 time.Time = time.Date(2022, 1, 2, 13, 14, 15, 0, time.Local)
+	mock        Registry
+)
 
 func TestRunSuite(t *testing.T) {
 	testutil.RunSuite(t,
@@ -88,11 +90,11 @@ func parseTime(t *testing.T, s string) time.Time {
 func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff {
 	result := diff.Diff{
 		LocationA: common.Location{
-			Path: rootPath1,
-			Time: parseTime(t, rootTimeStr1)},
+			Path: digestPath1,
+			Time: digestTime1},
 		LocationB: common.Location{
-			Path: rootPath2,
-			Time: parseTime(t, rootTimeStr2)},
+			Path: digestPath2,
+			Time: digestTime2},
 		Entries: map[string]diff.DiffEntry{}}
 	entry := 0
 	add := func(count int32, status diff.DiffStatus) {
@@ -118,7 +120,7 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 
 	expected := fmt.Sprintf(
 		"Old: (%v) %v\nNew: (%v) %v\n%vIdentical: %v | Modified: %v | Added: %v | Removed: %v\n",
-		rootTimeStr1, rootPath1, rootTimeStr2, rootPath2,
+		digestTime1, digestPath1, digestTime2, digestPath2,
 		entriesText,
 		identical, modified, added, removed)
 
@@ -130,11 +132,15 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 }
 
 func makeDigests(t *testing.T) (digest.Digest, digest.Digest) {
-	d1, err := digest.Load("../testdata/diff/comparator/digest-old.txt")
+	d1, err := digest.Load(
+		"../testdata/diff/comparator/",
+		"../testdata/diff/comparator/digest-old.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	d2, err := digest.Load("../testdata/diff/comparator/digest-new.txt")
+	d2, err := digest.Load(
+		"../testdata/diff/comparator/",
+		"../testdata/diff/comparator/digest-new.txt")
 	if err != nil {
 		t.Fatal(err)
 	}

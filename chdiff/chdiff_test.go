@@ -133,8 +133,8 @@ func mockReader(path, algorithm string) (digest.Digest, error) {
 	return mockDigestLoaded, nil
 }
 
-func mockWriter(digest digest.Digest) error {
-	mock.Register("write", digest)
+func mockWriter(digest digest.Digest, digestFile string) error {
+	mock.Register("write", digestFile)
 	return nil
 }
 
