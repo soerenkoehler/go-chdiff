@@ -8,14 +8,22 @@ import (
 
 type FileHashes map[string]string
 
+type HashType int32
+
+const (
+	Unknown HashType = iota
+	SHA256
+	SHA512
+)
+
 type Digest struct {
 	Location  common.Location
-	Algorithm string
+	Algorithm HashType
 	Entries   *FileHashes
 }
 
 func NewDigest(
-	digestPath, algorithm string,
+	digestPath string,
 	digestTime time.Time) Digest {
 
 	return Digest{
@@ -30,6 +38,6 @@ func NewDigest(
 				digestTime.Local().Second(),
 				0,
 				time.Local)},
-		Algorithm: algorithm,
+		Algorithm: Unknown,
 		Entries:   &FileHashes{}}
 }
