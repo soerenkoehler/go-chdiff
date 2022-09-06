@@ -2,14 +2,18 @@ package chdiff
 
 import (
 	_ "embed"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
 )
+
+const DefaultDigestName string = ".chdiff.txt"
 
 //go:embed description.txt
 var _Description string
@@ -19,14 +23,16 @@ var cli struct {
 	Verify CmdVerify `cmd:"" name:"verify" aliases:"v" help:"Verify digest file for PATH."`
 }
 
-type CmdCreate struct{ cmdDigest }
+type CmdCreate struct {
+	cmdDigest
+	Algorithm string `name:"algorithm" short:"a" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
+}
 
 type CmdVerify struct{ cmdDigest }
 
 type cmdDigest struct {
-	rootPath   string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
-	digestFile string `name:"file" aliases:"f" help:"Optional: Path to different location of the digest file."`
-	Algorithm  string `name:"algorithm" aliases:"a,algo" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
+	RootPath   string `arg:"" name:"PATH" type:"path" default:"." help:"Path for which to calculate the digest"`
+	DigestFile string `name:"file" short:"f" help:"Optional: Path to different location of the digest file."`
 }
 
 type ChdiffDependencies struct {
@@ -64,23 +70,40 @@ func Chdiff(
 func (cmd *CmdCreate) Run(deps ChdiffDependencies) error {
 	return deps.DigestWrite(
 		deps.DigestCalculate(
-			cmd.rootPath,
-			cmd.Algorithm),
-		cmd.digestFile)
+			cmd.RootPath,
+			hashTypeFromAlgorithm(cmd.Algorithm)),
+		defaultDigestFile(cmd.cmdDigest))
 }
 
 func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 	oldDigest, err := deps.DigestRead(
-		cmd.rootPath,
-		cmd.digestFile)
+		cmd.RootPath,
+		defaultDigestFile(cmd.cmdDigest))
 	if err == nil {
 		deps.DiffPrint(
 			deps.Stdout,
 			deps.DigestCompare(
 				oldDigest,
 				deps.DigestCalculate(
-					cmd.rootPath,
-					cmd.Algorithm)))
+					cmd.RootPath,
+					oldDigest.Algorithm)))
 	}
 	return err
+}
+
+func hashTypeFromAlgorithm(algorithm string) digest.HashType {
+	switch algorithm {
+	case "SHA256":
+		return digest.SHA256
+	case "SHA512":
+		return digest.SHA512
+	}
+	panic(fmt.Errorf("invalid algorithm %v", algorithm))
+}
+
+func defaultDigestFile(cmd cmdDigest) string {
+	if len(cmd.DigestFile) > 0 {
+		return cmd.DigestFile
+	}
+	return filepath.Join(cmd.RootPath, DefaultDigestName)
 }

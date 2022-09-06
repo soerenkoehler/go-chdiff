@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -48,8 +47,4 @@ func Save(digest Digest, digestFile string) error {
 		os.Chtimes(digestFile, digest.Location.Time, digest.Location.Time)
 	}
 	return nil
-}
-
-func DefaultDigestFile(path string) string {
-	return filepath.Join(path, ".chdiff.txt")
 }
