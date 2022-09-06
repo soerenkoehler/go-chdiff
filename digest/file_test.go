@@ -12,7 +12,7 @@ import (
 
 func TestLoadNonexistantFile(t *testing.T) {
 	path := "../testdata/digest/file/path-without-digest"
-	file := filepath.Join(path, ".chdiff.txt")
+	file := filepath.Join(path, "test-digest.txt")
 	expectedError := fmt.Sprintf("lstat %v: no such file or directory", file)
 	_, err := digest.Load(path, file)
 	if err == nil || err.Error() != expectedError {
@@ -31,7 +31,7 @@ func TestSaveLoad512(t *testing.T) {
 func testSaveLoad(t *testing.T, algorithm string) {
 	digestPath := t.TempDir()
 	digestTime := time.Now()
-	digestFile := digest.DefaultDigestFile(digestPath)
+	digestFile := filepath.Join(digestPath, "test-digest.txt")
 	expected := digest.NewDigest(digestPath, digestTime)
 	digest.Save(expected, digestFile)
 	actual, err := digest.Load(digestPath, digestFile)

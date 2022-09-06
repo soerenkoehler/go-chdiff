@@ -31,7 +31,7 @@ func TestDigest256(t *testing.T) {
 		size: 256,
 		seed: 1,
 		hash: "a6452fbd8c12f8df622c1ca4c567f966801fb56442aca03b4e1303e7a412a9d5",
-	}}, "SHA256")
+	}}, digest.SHA256)
 }
 
 func TestDigest512(t *testing.T) {
@@ -50,13 +50,13 @@ func TestDigest512(t *testing.T) {
 		size: 256,
 		seed: 1,
 		hash: "f3f00e46e5dc3819b8268afedb1221f25a4c29d3223979ede1df107155cc75bd427a5795b820fbd83fd4785899cb9de201b770a2c88a3bed90be37e82156e10b",
-	}}, "SHA512")
+	}}, digest.SHA512)
 }
 
 func verifyDigest(
 	t *testing.T,
 	data []testCase,
-	algorithm string) {
+	algorithm digest.HashType) {
 
 	digest := digest.Calculate(createData(t, data), algorithm)
 

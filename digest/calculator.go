@@ -17,7 +17,7 @@ import (
 	"github.com/soerenkoehler/go-chdiff/util"
 )
 
-type Calculator func(rootPath, algorithm string) Digest
+type Calculator func(rootPath string, algorithm HashType) Digest
 
 // TODO locale type like digestEntry
 
@@ -28,12 +28,12 @@ type digestEntry struct {
 
 type digestContext struct {
 	rootPath  string
-	algorithm string
+	algorithm HashType
 	waitGroup *sync.WaitGroup
 	digest    chan digestEntry
 }
 
-func Calculate(rootPath, algorithm string) Digest {
+func Calculate(rootPath string, algorithm HashType) Digest {
 	context := digestContext{
 		rootPath:  rootPath,
 		algorithm: algorithm,
@@ -107,11 +107,11 @@ func (context digestContext) processFile(file string) {
 	}
 }
 
-func getNewHash(algorithm string) hash.Hash {
+func getNewHash(algorithm HashType) hash.Hash {
 	switch algorithm {
-	case "SHA256":
+	case SHA256:
 		return sha256.New()
-	case "SHA512":
+	case SHA512:
 		return sha512.New()
 	}
 	panic(fmt.Errorf("invalid hash algorithm %v", algorithm))

@@ -17,7 +17,8 @@ var (
 	mock             Registry
 	mockDependencies chdiff.ChdiffDependencies
 
-	mockDigestLoaded     = digest.Digest{}
+	mockDigestLoaded = digest.Digest{
+		Algorithm: digest.SHA256}
 	mockDigestCalculated = digest.Digest{}
 	mockDiffResult       = diff.Diff{}
 )
@@ -54,29 +55,29 @@ func TestRunSuite(t *testing.T) {
 				testDigestVerify(t,
 					[]string{"", "v"},
 					".",
-					".chdiff.SHA256.txt",
-					"SHA256")
+					chdiff.DefaultDigestName,
+					digest.SHA256)
 			},
 			"verify with path": func(t *testing.T) {
 				testDigestVerify(t,
 					[]string{"", "v", "x"},
 					"x",
-					".chdiff.SHA256.txt",
-					"SHA256")
+					chdiff.DefaultDigestName,
+					digest.SHA256)
 			},
 			"create without path": func(t *testing.T) {
 				testDigestCreate(t,
 					[]string{"", "c"},
 					".",
-					".chdiff.SHA256.txt",
-					"SHA256")
+					chdiff.DefaultDigestName,
+					digest.SHA256)
 			},
 			"create with path": func(t *testing.T) {
 				testDigestCreate(t,
 					[]string{"", "c", "x"},
 					"x",
-					".chdiff.SHA256.txt",
-					"SHA256")
+					chdiff.DefaultDigestName,
+					digest.SHA256)
 			},
 		})
 }
@@ -99,14 +100,16 @@ func testErrorMessage(
 func testDigestVerify(
 	t *testing.T,
 	args []string,
-	dataPath, digestPath, algorithm string) {
+	dataPath, digestPath string,
+	algorithm digest.HashType) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
+	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
 
 	chdiff.Chdiff("TEST", args, mockDependencies)
 
 	mock.
-		Verify("read", Is(absDataPath), Is(algorithm)).
+		Verify("read", Is(absDataPath), Is(absDigestFile)).
 		Verify("calculate", Is(absDataPath), Is(algorithm)).
 		Verify("compare", Is(mockDigestLoaded), Is(mockDigestCalculated)).
 		Verify("print", Is(mockDiffResult)).
@@ -116,29 +119,31 @@ func testDigestVerify(
 func testDigestCreate(
 	t *testing.T,
 	args []string,
-	dataPath, digestPath, algorithm string) {
+	dataPath, digestPath string,
+	algorithm digest.HashType) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
+	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
 
 	chdiff.Chdiff("TEST", args, mockDependencies)
 
 	mock.
 		Verify("calculate", Is(absDataPath), Is(algorithm)).
-		Verify("write", Is(mockDigestCalculated)).
+		Verify("write", Is(mockDigestCalculated), Is(absDigestFile)).
 		NoMoreInvocations()
 }
 
-func mockReader(path, algorithm string) (digest.Digest, error) {
-	mock.Register("read", path, algorithm)
+func mockReader(path, file string) (digest.Digest, error) {
+	mock.Register("read", path, file)
 	return mockDigestLoaded, nil
 }
 
 func mockWriter(digest digest.Digest, digestFile string) error {
-	mock.Register("write", digestFile)
+	mock.Register("write", digest, digestFile)
 	return nil
 }
 
-func mockCalculator(path, algorithm string) digest.Digest {
+func mockCalculator(path string, algorithm digest.HashType) digest.Digest {
 	mock.Register("calculate", path, algorithm)
 	return mockDigestCalculated
 }
