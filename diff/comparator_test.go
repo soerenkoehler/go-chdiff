@@ -9,8 +9,8 @@ import (
 	"github.com/soerenkoehler/go-chdiff/common"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
-	. "github.com/soerenkoehler/go-testutils/mockutil"
-	"github.com/soerenkoehler/go-testutils/testutil"
+	. "github.com/soerenkoehler/go-util-test/mock"
+	"github.com/soerenkoehler/go-util-test/test"
 )
 
 const (
@@ -27,12 +27,12 @@ var (
 )
 
 func TestRunSuite(t *testing.T) {
-	testutil.RunSuite(t,
+	test.RunSuite(t,
 		func(t *testing.T) {
 			mock = NewRegistry(t)
 		},
 		nil,
-		testutil.Suite{
+		test.Suite{
 			"print empty diff": func(t *testing.T) {
 				diff.Print(mock.StdOut, makeDiff(t, 0, 0, 0, 0))
 
@@ -79,13 +79,14 @@ func TestRunSuite(t *testing.T) {
 		})
 }
 
-func parseTime(t *testing.T, s string) time.Time {
-	time, err := time.Parse(common.LocationTimeFormat, s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return time
-}
+// TODO unused?
+// func parseTime(t *testing.T, s string) time.Time {
+// 	time, err := time.Parse(common.LocationTimeFormat, s)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	return time
+// }
 
 func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff {
 	result := diff.Diff{
@@ -119,8 +120,9 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 	entriesText := strings.Join(append(entries, ""), "\n")
 
 	expected := fmt.Sprintf(
-		"Old: (%v) %v\nNew: (%v) %v\n%vIdentical: %v | Modified: %v | Added: %v | Removed: %v\n",
-		digestTime1, digestPath1, digestTime2, digestPath2,
+		"Old: (%s) %v\nNew: (%s) %v\n%vIdentical: %v | Modified: %v | Added: %v | Removed: %v\n",
+		digestTime1.Format(common.LocationTimeFormat), digestPath1,
+		digestTime2.Format(common.LocationTimeFormat), digestPath2,
 		entriesText,
 		identical, modified, added, removed)
 

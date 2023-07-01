@@ -9,8 +9,8 @@ import (
 	"github.com/soerenkoehler/go-chdiff/chdiff"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
-	. "github.com/soerenkoehler/go-testutils/mockutil"
-	"github.com/soerenkoehler/go-testutils/testutil"
+	. "github.com/soerenkoehler/go-util-test/mock"
+	"github.com/soerenkoehler/go-util-test/test"
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 )
 
 func TestRunSuite(t *testing.T) {
-	testutil.RunSuite(t,
+	test.RunSuite(t,
 		func(t *testing.T) {
 			mock = NewRegistry(t)
 			mockDependencies = chdiff.ChdiffDependencies{
@@ -38,7 +38,7 @@ func TestRunSuite(t *testing.T) {
 				KongExit:        func(e int) { mock.Register("exit", e) }}
 		},
 		nil,
-		testutil.Suite{
+		test.Suite{
 			"no default": func(t *testing.T) {
 				testErrorMessage(t,
 					[]string{""},
