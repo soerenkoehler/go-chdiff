@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Go-Util-Build
 
 on:
@@ -40,3 +41,35 @@ jobs:
 ========
           go run github.com/soerenkoehler/go-simpson@main --artifact-name chdiff
 >>>>>>>> b5bd994 (squashed WIP):.github/workflows/go-simpson-build.yml
+||||||| parent of cf48265 (update workflowfile)
+=======
+name: Go-Util-Build
+
+on:
+  push
+
+jobs:
+  build-and-release:
+    name: Build And Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.0.1
+        with:
+          go-version: "1.20"
+
+      - name: Checkout
+        uses: actions/checkout@v3.5.3
+
+      - name: Setup Environment
+        run: |
+          echo 'GITHUB_CONTEXT<<EOF' >>$GITHUB_ENV
+          echo '${{toJson(github)}}' >>$GITHUB_ENV
+          echo 'EOF' >>$GITHUB_ENV
+          echo 'GOPROXY=direct' >>$GITHUB_ENV
+
+      - name: Build
+        run: |
+          go run github.com/soerenkoehler/go-util-build@main 
+>>>>>>> cf48265 (update workflowfile)
