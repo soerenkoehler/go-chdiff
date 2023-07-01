@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/soerenkoehler/go-chdiff/digest"
-	"github.com/soerenkoehler/go-testutils/datautil"
+	"github.com/soerenkoehler/go-util-test/data"
 )
 
 type testCase struct {
@@ -55,29 +55,29 @@ func TestDigest512(t *testing.T) {
 
 func verifyDigest(
 	t *testing.T,
-	data []testCase,
+	testdata []testCase,
 	algorithm digest.HashType) {
 
-	digest := digest.Calculate(createData(t, data), algorithm)
+	digest := digest.Calculate(createData(t, testdata), algorithm)
 
-	if len(*digest.Entries) != len(data) {
+	if len(*digest.Entries) != len(testdata) {
 		t.Fatal("Digest size must match number of input data points")
 	}
 
-	for _, dataPoint := range data {
+	for _, dataPoint := range testdata {
 		verifyDataPoint(t, dataPoint, digest.Entries)
 	}
 }
 
 func createData(
 	t *testing.T,
-	data []testCase) string {
+	testdata []testCase) string {
 
 	root := t.TempDir()
 
-	for _, dataPoint := range data {
+	for _, dataPoint := range testdata {
 		file := path.Join(root, dataPoint.path)
-		datautil.CreateRandomFile(file, dataPoint.size, dataPoint.seed)
+		data.CreateRandomFile(file, dataPoint.size, dataPoint.seed)
 	}
 
 	return root
