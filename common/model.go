@@ -1,10 +1,14 @@
 package common
 
-import "time"
+import (
+	"time"
+
+	"github.com/lestrrat-go/strftime"
+)
 
 type Location struct {
 	Path string
 	Time time.Time
 }
 
-const LocationTimeFormat = "2006-01-02 15:04:05"
+var LocationTimeFormat, _ = strftime.New("%Y-%m-%d %H-%M-%S")
