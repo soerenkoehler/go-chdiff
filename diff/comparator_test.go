@@ -121,8 +121,8 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 
 	expected := fmt.Sprintf(
 		"Old: (%s) %v\nNew: (%s) %v\n%vIdentical: %v | Modified: %v | Added: %v | Removed: %v\n",
-		digestTime1.Format(common.LocationTimeFormat), digestPath1,
-		digestTime2.Format(common.LocationTimeFormat), digestPath2,
+		common.LocationTimeFormat.FormatString(digestTime1), digestPath1,
+		common.LocationTimeFormat.FormatString(digestTime2), digestPath2,
 		entriesText,
 		identical, modified, added, removed)
 

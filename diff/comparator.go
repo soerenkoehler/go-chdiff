@@ -55,9 +55,9 @@ func Compare(old, new digest.Digest) Diff {
 func Print(out io.Writer, diff Diff) {
 	fmt.Fprintf(out,
 		"Old: (%s) %v\nNew: (%s) %v\n",
-		diff.LocationA.Time.Format(common.LocationTimeFormat),
+		common.LocationTimeFormat.FormatString(diff.LocationA.Time),
 		diff.LocationA.Path,
-		diff.LocationB.Time.Format(common.LocationTimeFormat),
+		common.LocationTimeFormat.FormatString(diff.LocationB.Time),
 		diff.LocationB.Path)
 
 	count := make(map[DiffStatus]int32, 4)
