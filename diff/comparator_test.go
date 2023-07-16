@@ -2,6 +2,7 @@ package diff_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +17,8 @@ import (
 const (
 	digestPath1 = "/path/to/digestfile"
 	digestPath2 = "/path/to/dir"
+	digestFile1 = "../testdata/diff/comparator/digest-old.txt"
+	digestFile2 = "../testdata/diff/comparator/digest-new.txt"
 	fileHash1   = "hash1"
 	fileHash2   = "hash2"
 )
@@ -67,7 +70,9 @@ func TestRunSuite(t *testing.T) {
 				}, 0, 3, 5, 7)
 			},
 			"compare by hash": func(t *testing.T) {
-				diff.Print(mock.StdOut, diff.Compare(makeDigests(t)))
+				diff.Print(mock.StdOut, diff.Compare(
+					makeDigest(t, digestPath1, digestFile1, digestTime1),
+					makeDigest(t, digestPath2, digestFile2, digestTime2)))
 
 				expect(t,
 					[]string{
@@ -78,15 +83,6 @@ func TestRunSuite(t *testing.T) {
 			},
 		})
 }
-
-// TODO unused?
-// func parseTime(t *testing.T, s string) time.Time {
-// 	time, err := time.Parse(common.LocationTimeFormat, s)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	return time
-// }
 
 func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff {
 	result := diff.Diff{
@@ -133,18 +129,11 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 	}
 }
 
-func makeDigests(t *testing.T) (digest.Digest, digest.Digest) {
-	d1, err := digest.Load(
-		"../testdata/diff/comparator/",
-		"../testdata/diff/comparator/digest-old.txt")
+func makeDigest(t *testing.T, digestPath, digestFile string, modTime time.Time) digest.Digest {
+	os.Chtimes(digestFile1, modTime, modTime)
+	result, err := digest.Load(digestPath, digestFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	d2, err := digest.Load(
-		"../testdata/diff/comparator/",
-		"../testdata/diff/comparator/digest-new.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	return d1, d2
+	return result
 }
