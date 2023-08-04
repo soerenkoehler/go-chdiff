@@ -1,8 +1,6 @@
 package digest_test
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -44,10 +42,4 @@ func testSaveLoad(t *testing.T, hashsize int) {
 	if !cmp.Equal(expected, actual) {
 		t.Fatal(cmp.Diff(expected, actual))
 	}
-}
-
-func createRandomHash(hashsize int) string {
-	hashbytes := make([]byte, hashsize)
-	rand.Read(hashbytes)
-	return hex.EncodeToString(hashbytes)
 }
