@@ -1,6 +1,8 @@
 package digest_test
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -21,18 +23,19 @@ func TestLoadNonexistantFile(t *testing.T) {
 }
 
 func TestSaveLoad256(t *testing.T) {
-	testSaveLoad(t, "SHA256")
+	testSaveLoad(t, 32)
 }
 
 func TestSaveLoad512(t *testing.T) {
-	testSaveLoad(t, "SHA512")
+	testSaveLoad(t, 64)
 }
 
-func testSaveLoad(t *testing.T, algorithm string) {
+func testSaveLoad(t *testing.T, hashsize int) {
 	digestPath := t.TempDir()
 	digestTime := time.Now()
 	digestFile := filepath.Join(digestPath, "test-digest.txt")
 	expected := digest.NewDigest(digestPath, digestTime)
+	expected.AddFileHash("file", createRandomHash(hashsize))
 	digest.Save(expected, digestFile)
 	actual, err := digest.Load(digestPath, digestFile)
 	if err != nil {
@@ -41,4 +44,10 @@ func testSaveLoad(t *testing.T, algorithm string) {
 	if !cmp.Equal(expected, actual) {
 		t.Fatal(cmp.Diff(expected, actual))
 	}
+}
+
+func createRandomHash(hashsize int) string {
+	hashbytes := make([]byte, hashsize)
+	rand.Read(hashbytes)
+	return hex.EncodeToString(hashbytes)
 }
