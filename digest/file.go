@@ -31,7 +31,7 @@ func Load(digestPath, digestFile string) (Digest, error) {
 			if len(tokens) != 2 {
 				return Digest{}, fmt.Errorf("invalid digest file")
 			}
-			(*digest.Entries)[tokens[1]] = tokens[0]
+			digest.AddFileHash(tokens[1], tokens[0])
 		}
 	}
 	return digest, err
@@ -42,7 +42,7 @@ func Save(digest Digest, digestFile string) error {
 	output, err := os.Create(digestFile)
 	if err == nil {
 		for k, v := range *digest.Entries {
-			fmt.Fprintf(output, "%v *%v", k, v)
+			fmt.Fprintf(output, "%v%v%v", v, SEPARATOR_BINARY, k)
 		}
 		os.Chtimes(digestFile, digest.Location.Time, digest.Location.Time)
 	}

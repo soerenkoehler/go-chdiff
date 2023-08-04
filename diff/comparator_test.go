@@ -130,7 +130,7 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 }
 
 func makeDigest(t *testing.T, digestPath, digestFile string, modTime time.Time) digest.Digest {
-	os.Chtimes(digestFile1, modTime, modTime)
+	os.Chtimes(digestFile, modTime, modTime)
 	result, err := digest.Load(digestPath, digestFile)
 	if err != nil {
 		t.Fatal(err)
