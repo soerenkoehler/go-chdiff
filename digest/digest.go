@@ -7,7 +7,7 @@ func (digest *Digest) AddFileHash(file, hash string) {
 	if digest.Algorithm == Unknown {
 		digest.Algorithm = newHashType
 	} else if digest.Algorithm != newHashType {
-		panic(fmt.Errorf("hash type mismatch old=%v new=%v", newHashType, hash))
+		panic(fmt.Errorf("hash type mismatch old=%v new=%v", digest.Algorithm, newHashType))
 	}
 	(*digest.Entries)[file] = hash
 }
