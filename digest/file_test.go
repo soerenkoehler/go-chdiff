@@ -8,16 +8,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/soerenkoehler/go-chdiff/digest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadNonexistantFile(t *testing.T) {
 	path := "../testdata/digest/file/path-without-digest"
 	file := filepath.Join(path, "test-digest.txt")
-	expectedError := fmt.Sprintf("lstat %v: no such file or directory", file)
 	_, err := digest.Load(path, file)
-	if err == nil || err.Error() != expectedError {
-		t.Fatalf("\nexpected: %v\n  actual: %v", expectedError, err)
-	}
+	assert.EqualError(t, err, fmt.Sprintf("lstat %v: no such file or directory", file))
 }
 
 func TestSaveLoad256(t *testing.T) {
@@ -33,13 +31,10 @@ func testSaveLoad(t *testing.T, hashsize int) {
 	digestTime := time.Now()
 	digestFile := filepath.Join(digestPath, "test-digest.txt")
 	expected := digest.NewDigest(digestPath, digestTime)
-	expected.AddFileHash("file", createRandomHash(hashsize))
+	expected.AddFileHash("file1", createRandomHash(hashsize))
+	expected.AddFileHash("file2", createRandomHash(hashsize))
 	digest.Save(expected, digestFile)
 	actual, err := digest.Load(digestPath, digestFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !cmp.Equal(expected, actual) {
-		t.Fatal(cmp.Diff(expected, actual))
-	}
+	assert.Nil(t, err)
+	assert.True(t, cmp.Equal(expected, actual), cmp.Diff(expected, actual))
 }

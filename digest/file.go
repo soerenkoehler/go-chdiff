@@ -27,6 +27,7 @@ func Load(digestPath, digestFile string) (Digest, error) {
 		lines := bufio.NewScanner(input)
 		for lines.Scan() {
 			normalized := strings.Replace(lines.Text(), SEPARATOR_TEXT, SEPARATOR_BINARY, 1)
+			println(normalized)
 			tokens := strings.SplitN(normalized, SEPARATOR_BINARY, 2)
 			if len(tokens) != 2 {
 				return Digest{}, fmt.Errorf("invalid digest file")
@@ -42,7 +43,7 @@ func Save(digest Digest, digestFile string) error {
 	output, err := os.Create(digestFile)
 	if err == nil {
 		for k, v := range *digest.Entries {
-			fmt.Fprintf(output, "%v%v%v", v, SEPARATOR_BINARY, k)
+			fmt.Fprintf(output, "%v%v%v\n", v, SEPARATOR_BINARY, k)
 		}
 		os.Chtimes(digestFile, digest.Location.Time, digest.Location.Time)
 	}

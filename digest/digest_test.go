@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"github.com/soerenkoehler/go-chdiff/digest"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInvalidHash(t *testing.T) {
-	require.PanicsWithError(t, "invalid hash bad-hash", func() {
+	assert.PanicsWithError(t, "invalid hash bad-hash", func() {
 		digest := digest.NewDigest("path", time.Now())
 		digest.AddFileHash("file", "bad-hash")
 	})
 }
 
 func TestHashTypeMismatch(t *testing.T) {
-	require.PanicsWithError(t, "hash type mismatch old=1 new=2", func() {
+	assert.PanicsWithError(t, "hash type mismatch old=1 new=2", func() {
 		digest := digest.NewDigest("path", time.Now())
 		digest.AddFileHash("file", createRandomHash(32))
 		digest.AddFileHash("file", createRandomHash(64))
