@@ -6,6 +6,8 @@ import (
 
 	"github.com/soerenkoehler/go-chdiff/digest"
 	"github.com/soerenkoehler/go-util-test/data"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testCase struct {
@@ -60,12 +62,10 @@ func verifyDigest(
 
 	digest := digest.Calculate(createData(t, testdata), algorithm)
 
-	if len(*digest.Entries) != len(testdata) {
-		t.Fatal("Digest size must match number of input data points")
-	}
+	require.Equal(t, len(*digest.Entries), len(testdata))
 
 	for _, dataPoint := range testdata {
-		verifyDataPoint(t, dataPoint, digest.Entries)
+		assert.Equal(t, dataPoint.hash, (*digest.Entries)[dataPoint.path])
 	}
 }
 
@@ -78,24 +78,26 @@ func createData(
 	for _, dataPoint := range testdata {
 		file := path.Join(root, dataPoint.path)
 		data.CreateRandomFile(file, dataPoint.size, dataPoint.seed)
+		// in := rand.New(rand.NewSource(2))
+		// io.CopyN(os.Stdout, in, 16)
 	}
 
 	return root
 }
 
-func verifyDataPoint(
-	t *testing.T,
-	dataPoint testCase,
-	hashes *digest.FileHashes) {
+// func verifyDataPoint(
+// 	t *testing.T,
+// 	dataPoint testCase,
+// 	hashes *digest.FileHashes) {
 
-	expectedPath := dataPoint.path
-	expectedHash := dataPoint.hash
+// 	expectedPath := dataPoint.path
+// 	expectedHash := dataPoint.hash
 
-	actualHash := (*hashes)[expectedPath]
-	if actualHash != expectedHash {
-		t.Errorf("hash mismatch\nexpected: %v\nactual: %v\ntest file: %v",
-			expectedHash,
-			actualHash,
-			expectedPath)
-	}
-}
+// 	actualHash := (*hashes)[expectedPath]
+// 	if actualHash != expectedHash {
+// 		t.Errorf("hash mismatch\nexpected: %v\nactual: %v\ntest file: %v",
+// 			expectedHash,
+// 			actualHash,
+// 			expectedPath)
+// 	}
+// }
