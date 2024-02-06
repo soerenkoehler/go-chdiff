@@ -39,7 +39,6 @@ func Load(digestPath, digestFile string) (Digest, error) {
 }
 
 func Save(digest Digest, digestFile string) error {
-	// TODO save digest data
 	output, err := os.Create(digestFile)
 	if err == nil {
 		for k, v := range *digest.Entries {

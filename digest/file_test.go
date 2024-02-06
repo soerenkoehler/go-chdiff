@@ -9,25 +9,44 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/soerenkoehler/go-chdiff/digest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestLoadNonexistantFile(t *testing.T) {
-	path := "../testdata/digest/file/path-without-digest"
-	file := filepath.Join(path, "test-digest.txt")
+type TestSuiteFile struct {
+	suite.Suite
+}
+
+func (s *TestSuiteFile) SetupTest() {
+}
+
+func TestSuiteFileRunner(t *testing.T) {
+	suite.Run(t, &TestSuiteFile{})
+}
+
+func (s *TestSuiteFile) TestLoadNonexistantFile() {
+	path := "../testdata/digest/file"
+	file := filepath.Join(path, "nonexistant-digest-file.txt")
 	_, err := digest.Load(path, file)
-	assert.EqualError(t, err, fmt.Sprintf("lstat %v: no such file or directory", file))
+	assert.EqualError(s.T(), err, fmt.Sprintf("lstat %v: no such file or directory", file))
 }
 
-func TestSaveLoad256(t *testing.T) {
-	testSaveLoad(t, 32)
+func (s *TestSuiteFile) TestLoadBadDigest1Column() {
+	path := "../testdata/digest/file"
+	file := filepath.Join(path, "bad-digest-1-column.txt")
+	_, err := digest.Load(path, file)
+	assert.EqualError(s.T(), err, "invalid digest file")
 }
 
-func TestSaveLoad512(t *testing.T) {
-	testSaveLoad(t, 64)
+func (s *TestSuiteFile) TestSaveLoad256() {
+	s.testSaveLoad(32)
 }
 
-func testSaveLoad(t *testing.T, hashsize int) {
-	digestPath := t.TempDir()
+func (s *TestSuiteFile) TestSaveLoad512() {
+	s.testSaveLoad(64)
+}
+
+func (s *TestSuiteFile) testSaveLoad(hashsize int) {
+	digestPath := s.T().TempDir()
 	digestTime := time.Now()
 	digestFile := filepath.Join(digestPath, "test-digest.txt")
 	expected := digest.NewDigest(digestPath, digestTime)
@@ -35,6 +54,6 @@ func testSaveLoad(t *testing.T, hashsize int) {
 	expected.AddFileHash("file2", createRandomHash(hashsize))
 	digest.Save(expected, digestFile)
 	actual, err := digest.Load(digestPath, digestFile)
-	assert.Nil(t, err)
-	assert.True(t, cmp.Equal(expected, actual), cmp.Diff(expected, actual))
+	assert.Nil(s.T(), err)
+	assert.True(s.T(), cmp.Equal(expected, actual), cmp.Diff(expected, actual))
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/soerenkoehler/go-chdiff/digest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type testCase struct {
@@ -19,8 +20,19 @@ type testCase struct {
 	hash string
 }
 
-func TestDigest256(t *testing.T) {
-	verifyDigest(t, []testCase{{
+type TestSuiteCalculator struct {
+	suite.Suite
+}
+
+func (s *TestSuiteCalculator) SetupTest() {
+}
+
+func TestSuiteRunner(t *testing.T) {
+	suite.Run(t, &TestSuiteCalculator{})
+}
+
+func (s *TestSuiteCalculator) TestDigest256() {
+	s.verifyDigest([]testCase{{
 		path: "zero",
 		size: 0,
 		seed: 1,
@@ -38,8 +50,8 @@ func TestDigest256(t *testing.T) {
 	}}, digest.SHA256)
 }
 
-func TestDigest512(t *testing.T) {
-	verifyDigest(t, []testCase{{
+func (s *TestSuiteCalculator) TestDigest512() {
+	s.verifyDigest([]testCase{{
 		path: "zero",
 		size: 0,
 		seed: 1,
@@ -57,25 +69,24 @@ func TestDigest512(t *testing.T) {
 	}}, digest.SHA512)
 }
 
-func verifyDigest(
-	t *testing.T,
+func (s *TestSuiteCalculator) verifyDigest(
 	testdata []testCase,
 	algorithm digest.HashType) {
 
-	digest := digest.Calculate(createData(t, testdata), algorithm)
+	digest := digest.Calculate(createData(s, testdata), algorithm)
 
-	require.Equal(t, len(testdata), len(*digest.Entries))
+	require.Equal(s.T(), len(testdata), len(*digest.Entries))
 
 	for _, dataPoint := range testdata {
-		assert.Equal(t, dataPoint.hash, (*digest.Entries)[dataPoint.path])
+		assert.Equal(s.T(), dataPoint.hash, (*digest.Entries)[dataPoint.path])
 	}
 }
 
 func createData(
-	t *testing.T,
+	s *TestSuiteCalculator,
 	testdata []testCase) string {
 
-	root := t.TempDir()
+	root := s.T().TempDir()
 
 	for _, dataPoint := range testdata {
 		file := path.Join(root, dataPoint.path)

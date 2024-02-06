@@ -18,8 +18,6 @@ import (
 
 type Calculator func(rootPath string, algorithm HashType) Digest
 
-// TODO locale type like digestEntry
-
 type digestEntry struct {
 	file string
 	hash string
