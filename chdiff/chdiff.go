@@ -2,7 +2,6 @@ package chdiff
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -35,15 +34,15 @@ type cmdDigest struct {
 	DigestFile string `name:"file" short:"f" help:"Optional: Path to different location of the digest file."`
 }
 
-type ChdiffDependencies struct {
-	DigestRead      digest.Reader
-	DigestWrite     digest.Writer
-	DigestCalculate digest.Calculator
-	DigestCompare   diff.Comparator
-	DiffPrint       diff.DiffPrinter
-	Stdout          io.Writer
-	Stderr          io.Writer
-	KongExit        func(int)
+type ChdiffDependencies interface {
+	DigestRead(string, string) (digest.Digest, error)
+	DigestWrite(digest.Digest, string) error
+	DigestCalculate(string, digest.HashType) digest.Digest
+	DigestCompare(digest.Digest, digest.Digest) diff.Diff
+	DiffPrint(io.Writer, diff.Diff)
+	Stdout() io.Writer
+	Stderr() io.Writer
+	KongExit() func(int)
 }
 
 func Chdiff(
@@ -52,15 +51,16 @@ func Chdiff(
 	deps ChdiffDependencies) {
 
 	os.Args = args
-	log.SetOutput(deps.Stderr)
+	log.SetOutput(deps.Stderr())
 
 	ctx := kong.Parse(
 		&cli,
 		kong.Vars{"VERSION": version},
 		kong.Description(_Description),
-		kong.Exit(deps.KongExit),
 		kong.UsageOnError(),
-		kong.Writers(deps.Stdout, deps.Stderr))
+		kong.Writers(deps.Stdout(), deps.Stderr()),
+		kong.Exit(deps.KongExit()),
+		kong.BindTo(deps, (*ChdiffDependencies)(nil)))
 
 	if ctx != nil {
 		ctx.FatalIfErrorf(ctx.Run(deps))
@@ -81,7 +81,7 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 		defaultDigestFile(cmd.cmdDigest))
 	if err == nil {
 		deps.DiffPrint(
-			deps.Stdout,
+			deps.Stdout(),
 			deps.DigestCompare(
 				oldDigest,
 				deps.DigestCalculate(
@@ -93,17 +93,20 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 
 func hashTypeFromAlgorithm(algorithm string) digest.HashType {
 	switch algorithm {
-	case "SHA256":
-		return digest.SHA256
 	case "SHA512":
 		return digest.SHA512
+	case "SHA256":
+		fallthrough
+	default:
+		return digest.SHA256
 	}
-	panic(fmt.Errorf("invalid algorithm %v", algorithm))
 }
 
 func defaultDigestFile(cmd cmdDigest) string {
-	if len(cmd.DigestFile) > 0 {
-		return cmd.DigestFile
+	digestFile := cmd.DigestFile
+	if len(cmd.DigestFile) == 0 {
+		digestFile = filepath.Join(cmd.RootPath, DefaultDigestName)
 	}
-	return filepath.Join(cmd.RootPath, DefaultDigestName)
+	absPath, _ := filepath.Abs(digestFile)
+	return absPath
 }

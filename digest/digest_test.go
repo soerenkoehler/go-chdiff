@@ -10,18 +10,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestInitialHashUnknown(t *testing.T) {
+	d := digest.NewDigest("path", time.Now())
+	assert.Equal(t, digest.Unknown, d.Algorithm)
+}
+
+func TestHashTypeSetOnFirstCall(t *testing.T) {
+	d := digest.NewDigest("path", time.Now())
+	d.AddFileHash("file", createRandomHash(32))
+	assert.Equal(t, digest.SHA256, d.Algorithm)
+}
+
 func TestInvalidHash(t *testing.T) {
 	assert.PanicsWithError(t, "invalid hash bad-hash", func() {
-		digest := digest.NewDigest("path", time.Now())
-		digest.AddFileHash("file", "bad-hash")
+		d := digest.NewDigest("path", time.Now())
+		d.AddFileHash("file", "bad-hash")
 	})
 }
 
 func TestHashTypeMismatch(t *testing.T) {
 	assert.PanicsWithError(t, "hash type mismatch old=1 new=2", func() {
-		digest := digest.NewDigest("path", time.Now())
-		digest.AddFileHash("file", createRandomHash(32))
-		digest.AddFileHash("file", createRandomHash(64))
+		d := digest.NewDigest("path", time.Now())
+		d.AddFileHash("file", createRandomHash(32))
+		d.AddFileHash("file", createRandomHash(64))
 	})
 }
 
