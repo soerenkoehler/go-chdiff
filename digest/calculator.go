@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
-	"fmt"
 	"hash"
 	"io"
 	"log"
@@ -80,7 +79,6 @@ func (context digestContext) processDir(dir string) {
 	for _, entry := range entries {
 		context.processPath(path.Join(dir, entry.Name()))
 	}
-
 }
 
 func (context digestContext) processFile(file string) {
@@ -109,10 +107,11 @@ func (context digestContext) processFile(file string) {
 
 func getNewHash(algorithm HashType) hash.Hash {
 	switch algorithm {
-	case SHA256:
-		return sha256.New()
 	case SHA512:
 		return sha512.New()
+	case SHA256:
+		fallthrough
+	default:
+		return sha256.New()
 	}
-	panic(fmt.Errorf("invalid hash algorithm %v", algorithm))
 }

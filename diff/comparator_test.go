@@ -10,8 +10,7 @@ import (
 	"github.com/soerenkoehler/go-chdiff/common"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
-	. "github.com/soerenkoehler/go-util-test/mock"
-	"github.com/soerenkoehler/go-util-test/test"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -26,65 +25,69 @@ const (
 var (
 	digestTime1 time.Time = time.Date(2020, 3, 4, 16, 17, 18, 0, time.Local)
 	digestTime2 time.Time = time.Date(2022, 1, 2, 13, 14, 15, 0, time.Local)
-	mock        Registry
 )
 
-func TestRunSuite(t *testing.T) {
-	test.RunSuite(t,
-		func(t *testing.T) {
-			mock = NewRegistry(t)
-		},
-		nil,
-		test.Suite{
-			"print empty diff": func(t *testing.T) {
-				diff.Print(mock.StdOut, makeDiff(t, 0, 0, 0, 0))
-
-				expect(t, []string{}, 0, 0, 0, 0)
-			},
-
-			"print diff with no changes": func(t *testing.T) {
-				diff.Print(mock.StdOut, makeDiff(t, 2, 0, 0, 0))
-
-				expect(t, []string{}, 2, 0, 0, 0)
-			},
-
-			"print diff with changes": func(t *testing.T) {
-				diff.Print(mock.StdOut, makeDiff(t, 0, 3, 5, 7))
-
-				expect(t, []string{
-					"* relPath0",
-					"* relPath1",
-					"- relPath10",
-					"- relPath11",
-					"- relPath12",
-					"- relPath13",
-					"- relPath14",
-					"* relPath2",
-					"+ relPath3",
-					"+ relPath4",
-					"+ relPath5",
-					"+ relPath6",
-					"+ relPath7",
-					"- relPath8",
-					"- relPath9",
-				}, 0, 3, 5, 7)
-			},
-			"compare by hash": func(t *testing.T) {
-				diff.Print(mock.StdOut, diff.Compare(
-					makeDigest(t, digestPath1, digestFile1, digestTime1),
-					makeDigest(t, digestPath2, digestFile2, digestTime2)))
-
-				expect(t,
-					[]string{
-						"- f0",
-						"* f2",
-						"+ f3",
-					}, 1, 1, 1, 1)
-			},
-		})
+type TestSuite struct {
+	suite.Suite
+	Stdout *strings.Builder
 }
 
-func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff {
+func (s *TestSuite) SetupTest() {
+	s.Stdout = &strings.Builder{}
+}
+
+func TestSuiteRunner(t *testing.T) {
+	suite.Run(t, &TestSuite{})
+}
+
+func (s *TestSuite) TestOutputEmptyDiff() {
+	diff.Print(s.Stdout, makeDiff(s, 0, 0, 0, 0))
+
+	expect(s, []string{}, 0, 0, 0, 0)
+}
+
+func (s *TestSuite) TestOutputNoChanges() {
+	diff.Print(s.Stdout, makeDiff(s, 2, 0, 0, 0))
+
+	expect(s, []string{}, 2, 0, 0, 0)
+}
+
+func (s *TestSuite) TestOutputWithChanges() {
+	diff.Print(s.Stdout, makeDiff(s, 0, 3, 5, 7))
+
+	expect(s, []string{
+		"* relPath0",
+		"* relPath1",
+		"- relPath10",
+		"- relPath11",
+		"- relPath12",
+		"- relPath13",
+		"- relPath14",
+		"* relPath2",
+		"+ relPath3",
+		"+ relPath4",
+		"+ relPath5",
+		"+ relPath6",
+		"+ relPath7",
+		"- relPath8",
+		"- relPath9",
+	}, 0, 3, 5, 7)
+}
+
+func (s *TestSuite) TestCompare() {
+	diff.Print(s.Stdout, diff.Compare(
+		makeDigest(s, digestPath1, digestFile1, digestTime1),
+		makeDigest(s, digestPath2, digestFile2, digestTime2)))
+
+	expect(s,
+		[]string{
+			"- f0",
+			"* f2",
+			"+ f3",
+		}, 1, 1, 1, 1)
+}
+
+func makeDiff(s *TestSuite, identical, modified, added, removed int32) diff.Diff {
 	result := diff.Diff{
 		LocationA: common.Location{
 			Path: digestPath1,
@@ -111,7 +114,7 @@ func makeDiff(t *testing.T, identical, modified, added, removed int32) diff.Diff
 	return result
 }
 
-func expect(t *testing.T, entries []string, identical, modified, added, removed int32) {
+func expect(s *TestSuite, entries []string, identical, modified, added, removed int32) {
 	// for non-empty entries list require a final newline
 	entriesText := strings.Join(append(entries, ""), "\n")
 
@@ -122,18 +125,18 @@ func expect(t *testing.T, entries []string, identical, modified, added, removed 
 		entriesText,
 		identical, modified, added, removed)
 
-	actual := mock.StdOut.String()
+	actual := s.Stdout.String()
 
 	if actual != expected {
-		t.Fatalf("expected:\n%v\nactual:\n%v", expected, actual)
+		s.T().Fatalf("expected:\n%v\nactual:\n%v", expected, actual)
 	}
 }
 
-func makeDigest(t *testing.T, digestPath, digestFile string, modTime time.Time) digest.Digest {
+func makeDigest(s *TestSuite, digestPath, digestFile string, modTime time.Time) digest.Digest {
 	os.Chtimes(digestFile, modTime, modTime)
 	result, err := digest.Load(digestPath, digestFile)
 	if err != nil {
-		t.Fatal(err)
+		s.T().Fatal(err)
 	}
 	return result
 }

@@ -4,10 +4,11 @@ import "fmt"
 
 func (digest *Digest) AddFileHash(file, hash string) {
 	newHashType := getHashType(hash)
-	if digest.Algorithm == Unknown {
+	if digest.Algorithm != newHashType {
+		if digest.Algorithm != Unknown {
+			panic(fmt.Errorf("hash type mismatch old=%v new=%v", digest.Algorithm, newHashType))
+		}
 		digest.Algorithm = newHashType
-	} else if digest.Algorithm != newHashType {
-		panic(fmt.Errorf("hash type mismatch old=%v new=%v", digest.Algorithm, newHashType))
 	}
 	(*digest.Entries)[file] = hash
 }
