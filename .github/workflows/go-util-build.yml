@@ -71,5 +71,11 @@ jobs:
 
       - name: Build
         run: |
+<<<<<<< HEAD
           go run github.com/soerenkoehler/go-util-build@main 
 >>>>>>> cf48265 (update workflowfile)
+||||||| parent of 2454d25 (fix build.yml)
+          go run github.com/soerenkoehler/go-util-build@main 
+=======
+          go run github.com/soerenkoehler/go-util-build@main --artifact-name=chdiff
+>>>>>>> 2454d25 (fix build.yml)
