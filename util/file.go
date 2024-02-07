@@ -4,7 +4,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// PathFilter defines patterns to match against paths
+type PathFilter struct {
+	Prefix []string
+	Suffix []string
+}
 
 // PathInfo distilles information from FileInfo and Readlink
 type PathInfo struct {
@@ -30,4 +37,18 @@ func Stat(path string) PathInfo {
 		IsDir:     false,
 		IsSymlink: false,
 		Target:    path}
+}
+
+func (filter *PathFilter) Matches(path string) bool {
+	for _, pattern := range filter.Prefix {
+		if strings.HasPrefix(path, pattern) {
+			return true
+		}
+	}
+	for _, pattern := range filter.Suffix {
+		if strings.HasSuffix(path, pattern) {
+			return true
+		}
+	}
+	return false
 }

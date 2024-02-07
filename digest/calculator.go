@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"time"
@@ -16,7 +15,10 @@ import (
 	"github.com/soerenkoehler/go-chdiff/util"
 )
 
-type Calculator func(rootPath string, algorithm HashType) Digest
+type Calculator func(
+	rootPath string,
+	exclude util.PathFilter,
+	algorithm HashType) Digest
 
 type digestEntry struct {
 	file string
@@ -25,23 +27,35 @@ type digestEntry struct {
 
 type digestContext struct {
 	rootPath  string
+	exclude   util.PathFilter
 	algorithm HashType
 	waitGroup *sync.WaitGroup
 	digest    chan digestEntry
 }
 
-func Calculate(rootPath string, algorithm HashType) Digest {
+func Calculate(
+	rootPath string,
+	exclude util.PathFilter,
+	algorithm HashType) Digest {
+
 	context := digestContext{
 		rootPath:  rootPath,
+		exclude:   exclude,
 		algorithm: algorithm,
 		waitGroup: &sync.WaitGroup{},
 		digest:    make(chan digestEntry),
 	}
 
 	go func() {
-		context.processPath(context.rootPath)
+		defer close(context.digest)
+
+		absPath, err := filepath.Abs(context.rootPath)
+		if err == nil {
+			return
+		}
+
+		context.processPath(absPath)
 		context.waitGroup.Wait()
-		close(context.digest)
 	}()
 
 	result := NewDigest(rootPath, time.Now())
@@ -55,6 +69,12 @@ func Calculate(rootPath string, algorithm HashType) Digest {
 func (context digestContext) processPath(path string) {
 	context.waitGroup.Add(1)
 	go func() {
+		defer context.waitGroup.Done()
+
+		if context.exclude.Matches(path) {
+			return
+		}
+
 		switch info := util.Stat(path); {
 		case info.IsSymlink:
 			log.Printf("[W] skipping symlink: %s => %s", path, info.Target)
@@ -63,7 +83,7 @@ func (context digestContext) processPath(path string) {
 		default:
 			context.processFile(path)
 		}
-		context.waitGroup.Done()
+
 	}()
 }
 
@@ -75,7 +95,7 @@ func (context digestContext) processDir(dir string) {
 	}
 
 	for _, entry := range entries {
-		context.processPath(path.Join(dir, entry.Name()))
+		context.processPath(filepath.Join(dir, entry.Name()))
 	}
 }
 
