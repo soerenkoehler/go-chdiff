@@ -4,10 +4,11 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/soerenkoehler/go-chdiff/digest"
+	"github.com/soerenkoehler/go-chdiff/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -73,7 +74,7 @@ func (s *TestSuiteCalculator) verifyDigest(
 	testdata []testCase,
 	algorithm digest.HashType) {
 
-	digest := digest.Calculate(createData(s, testdata), algorithm)
+	digest := digest.Calculate(createData(s, testdata), util.PathFilter{}, algorithm)
 
 	require.Equal(s.T(), len(testdata), len(*digest.Entries))
 
@@ -89,7 +90,7 @@ func createData(
 	root := s.T().TempDir()
 
 	for _, dataPoint := range testdata {
-		file := path.Join(root, dataPoint.path)
+		file := filepath.Join(root, dataPoint.path)
 		createRandomFile(file, dataPoint.size, dataPoint.seed)
 	}
 
@@ -97,7 +98,7 @@ func createData(
 }
 
 func createRandomFile(file string, size, seed int64) {
-	err := os.MkdirAll(path.Dir(file), 0700)
+	err := os.MkdirAll(filepath.Dir(file), 0700)
 	if err != nil {
 		panic(err)
 	}
