@@ -79,16 +79,20 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 	oldDigest, err := deps.DigestRead(
 		cmd.RootPath,
 		defaultDigestFile(cmd.cmdDigest))
-	if err == nil {
-		deps.DiffPrint(
-			deps.Stdout(),
-			deps.DigestCompare(
-				oldDigest,
-				deps.DigestCalculate(
-					cmd.RootPath,
-					oldDigest.Algorithm)))
+
+	if err != nil {
+		return err
 	}
-	return err
+
+	deps.DiffPrint(
+		deps.Stdout(),
+		deps.DigestCompare(
+			oldDigest,
+			deps.DigestCalculate(
+				cmd.RootPath,
+				oldDigest.Algorithm)))
+
+	return nil
 }
 
 func hashTypeFromAlgorithm(algorithm string) digest.HashType {
