@@ -1,9 +1,10 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"log"
-	"os"
+	"strings"
 )
 
 type LogLevel int32
@@ -13,14 +14,16 @@ const (
 	LOG_INFO
 	LOG_WARN
 	LOG_ERROR
+	LOG_FATAL
 	LOG_NONE
 )
 
 var logPrefixe = map[LogLevel]string{
-	LOG_DEBUG: "[D]",
-	LOG_INFO:  "[I]",
-	LOG_WARN:  "[W]",
-	LOG_ERROR: "[E]",
+	LOG_DEBUG: `[D] `,
+	LOG_INFO:  `[I] `,
+	LOG_WARN:  `[W] `,
+	LOG_ERROR: `[E] `,
+	LOG_FATAL: `/!\ `,
 }
 
 var minLevel = LOG_INFO
@@ -34,12 +37,16 @@ func SetLogLevel(newLevel LogLevel) {
 	minLevel = newLevel
 }
 
-func Log(aktLevel LogLevel, format string, v ...any) {
-	if minLevel <= aktLevel {
-		log.Print(logPrefixe[aktLevel])
-		log.Printf(format, v...)
-		log.Println()
+func Log(aktLevel LogLevel, format string, v ...any) string {
+	if minLevel > aktLevel {
+		return ""
 	}
+
+	var msg strings.Builder
+	msg.WriteString(logPrefixe[aktLevel])
+	msg.WriteString(fmt.Sprintf(format, v...))
+	log.Println(msg.String())
+	return msg.String()
 }
 
 func Debug(format string, v ...any) {
@@ -59,6 +66,5 @@ func Error(format string, v ...any) {
 }
 
 func Fatal(format string, v ...any) {
-	Error(format, v...)
-	os.Exit(-1)
+	panic(fmt.Errorf("%s", Log(LOG_FATAL, format, v...)))
 }
