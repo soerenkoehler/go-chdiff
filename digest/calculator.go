@@ -45,7 +45,12 @@ func Calculate(
 	go func() {
 		defer close(context.digest)
 
-		context.processPath(".")
+		absPath, err := filepath.Abs(context.rootPath)
+		if err != nil {
+			util.Fatal(err.Error())
+		}
+
+		context.processPath(absPath)
 		context.waitGroup.Wait()
 	}()
 
@@ -114,13 +119,14 @@ func (context digestContext) processFile(file string) {
 }
 
 func (context digestContext) pathExcluded(path string) bool {
-	absPath, err := filepath.Abs(filepath.Join(context.rootPath, path))
+	relPath, err := filepath.Rel(context.rootPath, path)
 	if err != nil {
 		util.Error(err.Error())
+		return false
 	}
 
-	return matchAnyPattern(absPath, common.Config.Exclude.Absolute) ||
-		matchAnyPattern(path, common.Config.Exclude.RootRelative) ||
+	return matchAnyPattern(path, common.Config.Exclude.Absolute) ||
+		matchAnyPattern(relPath, common.Config.Exclude.RootRelative) ||
 		matchAnyPattern(filepath.Base(path), common.Config.Exclude.Anywhere)
 }
 

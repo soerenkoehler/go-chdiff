@@ -22,14 +22,14 @@ func TestHashTypeSetOnFirstCall(t *testing.T) {
 }
 
 func TestInvalidHash(t *testing.T) {
-	assert.PanicsWithError(t, "invalid hash bad-hash", func() {
+	assert.PanicsWithError(t, `/!\ unknown hash type: bad-hash`, func() {
 		d := digest.NewDigest("path", time.Now())
 		d.AddFileHash("file", "bad-hash")
 	})
 }
 
 func TestHashTypeMismatch(t *testing.T) {
-	assert.PanicsWithError(t, "hash type mismatch old=1 new=2", func() {
+	assert.PanicsWithError(t, `/!\ hash type mismatch old=1 new=2`, func() {
 		d := digest.NewDigest("path", time.Now())
 		d.AddFileHash("file", createRandomHash(32))
 		d.AddFileHash("file", createRandomHash(64))
