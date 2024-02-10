@@ -6,18 +6,17 @@ import (
 	"encoding/hex"
 	"hash"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/soerenkoehler/go-chdiff/common"
 	"github.com/soerenkoehler/go-chdiff/util"
 )
 
 type Calculator func(
 	rootPath string,
-	exclude util.PathFilter,
 	algorithm HashType) Digest
 
 type digestEntry struct {
@@ -27,7 +26,6 @@ type digestEntry struct {
 
 type digestContext struct {
 	rootPath  string
-	exclude   util.PathFilter
 	algorithm HashType
 	waitGroup *sync.WaitGroup
 	digest    chan digestEntry
@@ -35,12 +33,10 @@ type digestContext struct {
 
 func Calculate(
 	rootPath string,
-	exclude util.PathFilter,
 	algorithm HashType) Digest {
 
 	context := digestContext{
 		rootPath:  rootPath,
-		exclude:   exclude,
 		algorithm: algorithm,
 		waitGroup: &sync.WaitGroup{},
 		digest:    make(chan digestEntry),
@@ -49,12 +45,7 @@ func Calculate(
 	go func() {
 		defer close(context.digest)
 
-		absPath, err := filepath.Abs(context.rootPath)
-		if err == nil {
-			return
-		}
-
-		context.processPath(absPath)
+		context.processPath(".")
 		context.waitGroup.Wait()
 	}()
 
@@ -71,26 +62,25 @@ func (context digestContext) processPath(path string) {
 	go func() {
 		defer context.waitGroup.Done()
 
-		if context.exclude.Matches(path) {
+		if context.pathExcluded(path) {
 			return
 		}
 
 		switch info := util.Stat(path); {
 		case info.IsSymlink:
-			log.Printf("[W] skipping symlink: %s => %s", path, info.Target)
+			util.Warn("skipping symlink: %v -> %v", path, info.Target)
 		case info.IsDir:
 			context.processDir(path)
 		default:
 			context.processFile(path)
 		}
-
 	}()
 }
 
 func (context digestContext) processDir(dir string) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		log.Printf("[E]: %s\n", err)
+		util.Error(err.Error())
 		return
 	}
 
@@ -102,13 +92,13 @@ func (context digestContext) processDir(dir string) {
 func (context digestContext) processFile(file string) {
 	relativePath, err := filepath.Rel(context.rootPath, file)
 	if err != nil {
-		log.Printf("[E]: %s\n", err)
+		util.Error(err.Error())
 		return
 	}
 
 	input, err := os.Open(file)
 	if err != nil {
-		log.Printf("[E]: %s\n", err)
+		util.Error(err.Error())
 		return
 	}
 
@@ -121,6 +111,35 @@ func (context digestContext) processFile(file string) {
 		file: relativePath,
 		hash: hex.EncodeToString(hash.Sum(nil)),
 	}
+}
+
+func (context digestContext) pathExcluded(path string) bool {
+	absPath, err := filepath.Abs(filepath.Join(context.rootPath, path))
+	if err != nil {
+		util.Error(err.Error())
+	}
+
+	return matchAnyPattern(absPath, common.Config.Exclude.Absolute) ||
+		matchAnyPattern(path, common.Config.Exclude.RootRelative) ||
+		matchAnyPattern(filepath.Base(path), common.Config.Exclude.Anywhere)
+}
+
+func matchAnyPattern(path string, patterns []string) bool {
+	for _, pattern := range patterns {
+		if matchPattern(pattern, path) {
+			return true
+		}
+	}
+	return false
+}
+
+func matchPattern(path, pattern string) bool {
+	match, err := filepath.Match(pattern, path)
+	if err != nil {
+		util.Error(err.Error())
+		return false
+	}
+	return match
 }
 
 func getNewHash(algorithm HashType) hash.Hash {

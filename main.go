@@ -8,7 +8,6 @@ import (
 	"github.com/soerenkoehler/go-chdiff/chdiff"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
-	"github.com/soerenkoehler/go-chdiff/util"
 )
 
 var _Version = "DEV"
@@ -24,7 +23,7 @@ func (*DefaultDependencies) DigestWrite(d digest.Digest, df string) error {
 }
 
 func (*DefaultDependencies) DigestCalculate(rp string, ht digest.HashType) digest.Digest {
-	return digest.Calculate(rp, util.PathFilter{}, ht)
+	return digest.Calculate(rp, ht)
 }
 
 func (*DefaultDependencies) DigestCompare(old, new digest.Digest) diff.Diff {
