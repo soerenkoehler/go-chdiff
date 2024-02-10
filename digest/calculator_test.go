@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/soerenkoehler/go-chdiff/digest"
-	"github.com/soerenkoehler/go-chdiff/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -25,11 +24,11 @@ type TestSuiteCalculator struct {
 	suite.Suite
 }
 
-func (s *TestSuiteCalculator) SetupTest() {
-}
-
 func TestSuiteRunner(t *testing.T) {
 	suite.Run(t, &TestSuiteCalculator{})
+}
+
+func (s *TestSuiteCalculator) SetupTest() {
 }
 
 func (s *TestSuiteCalculator) TestDigest256() {
@@ -74,7 +73,7 @@ func (s *TestSuiteCalculator) verifyDigest(
 	testdata []testCase,
 	algorithm digest.HashType) {
 
-	digest := digest.Calculate(createData(s, testdata), util.PathFilter{}, algorithm)
+	digest := digest.Calculate(createData(s, testdata), algorithm)
 
 	require.Equal(s.T(), len(testdata), len(*digest.Entries))
 
