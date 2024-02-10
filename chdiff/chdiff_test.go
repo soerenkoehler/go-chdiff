@@ -65,6 +65,10 @@ type TestSuite struct {
 	Dependencies *MockDependencies
 }
 
+func TestSuiteRunner(t *testing.T) {
+	suite.Run(t, &TestSuite{})
+}
+
 func (s *TestSuite) SetupTest() {
 	s.Stdout = &strings.Builder{}
 	s.Stderr = &strings.Builder{}
@@ -76,10 +80,6 @@ func (s *TestSuite) SetupTest() {
 		func(e int) {
 			s.Dependencies.MethodCalled("exit", e)
 		})
-}
-
-func TestSuiteRunner(t *testing.T) {
-	suite.Run(t, &TestSuite{})
 }
 
 func (s *TestSuite) TestNoCommand() {

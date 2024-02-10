@@ -32,12 +32,12 @@ type TestSuite struct {
 	Stdout *strings.Builder
 }
 
-func (s *TestSuite) SetupTest() {
-	s.Stdout = &strings.Builder{}
-}
-
 func TestSuiteRunner(t *testing.T) {
 	suite.Run(t, &TestSuite{})
+}
+
+func (s *TestSuite) SetupTest() {
+	s.Stdout = &strings.Builder{}
 }
 
 func (s *TestSuite) TestOutputEmptyDiff() {

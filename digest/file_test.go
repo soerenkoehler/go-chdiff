@@ -16,11 +16,11 @@ type TestSuiteFile struct {
 	suite.Suite
 }
 
-func (s *TestSuiteFile) SetupTest() {
-}
-
 func TestSuiteFileRunner(t *testing.T) {
 	suite.Run(t, &TestSuiteFile{})
+}
+
+func (s *TestSuiteFile) SetupTest() {
 }
 
 func (s *TestSuiteFile) TestLoadNonexistantFile() {
