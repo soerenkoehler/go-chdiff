@@ -2,24 +2,32 @@ package chdiff
 
 import (
 	_ "embed"
+	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/alecthomas/kong"
+	"github.com/soerenkoehler/go-chdiff/common"
 	"github.com/soerenkoehler/go-chdiff/diff"
 	"github.com/soerenkoehler/go-chdiff/digest"
+	"github.com/soerenkoehler/go-chdiff/util"
 )
 
-const DefaultDigestName string = ".chdiff.txt"
+const (
+	DefaultDigestName  string = ".chdiff.txt"
+	UserConfigFileName string = ".chdiff-config.json"
+)
 
-//go:embed description.txt
-var _Description string
+var (
+	//go:embed description.txt
+	_description string
 
-var cli struct {
-	Create CmdCreate `cmd:"" name:"create" aliases:"c" help:"Create digest file for PATH."`
-	Verify CmdVerify `cmd:"" name:"verify" aliases:"v" help:"Verify digest file for PATH."`
+	//go:embed default-config.json
+	_defaultConfigJson string
+)
+
 }
 
 type CmdCreate struct {
@@ -51,12 +59,15 @@ func Chdiff(
 	deps ChdiffDependencies) {
 
 	os.Args = args
-	log.SetOutput(deps.Stderr())
+	util.InitLogger(deps.Stderr())
+
+	loadConfig()
+
 
 	ctx := kong.Parse(
 		&cli,
 		kong.Vars{"VERSION": version},
-		kong.Description(_Description),
+		kong.Description(_description),
 		kong.UsageOnError(),
 		kong.Writers(deps.Stdout(), deps.Stderr()),
 		kong.Exit(deps.KongExit()),
@@ -81,7 +92,7 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 		defaultDigestFile(cmd.cmdDigest))
 
 	if err != nil {
-		return err
+		util.Fatal(err.Error())
 	}
 
 	deps.DiffPrint(
@@ -93,6 +104,29 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 				oldDigest.Algorithm)))
 
 	return nil
+}
+
+func loadConfig() {
+	if err := json.Unmarshal(readConfigFile(), &common.Config); err != nil {
+		util.Fatal(err.Error())
+	}
+	fmt.Printf("%+v\n", &common.Config) // TODO
+}
+
+func readConfigFile() []byte {
+	userhome, err := os.UserHomeDir()
+	if err != nil {
+		util.Debug("can't determine user home")
+		return []byte(_defaultConfigJson)
+	}
+
+	data, err := os.ReadFile(filepath.Join(userhome, UserConfigFileName))
+	if err != nil {
+		util.Debug("can't read user config")
+		return []byte(_defaultConfigJson)
+	}
+
+	return data
 }
 
 func hashTypeFromAlgorithm(algorithm string) digest.HashType {

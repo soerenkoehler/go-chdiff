@@ -11,4 +11,12 @@ type Location struct {
 	Time time.Time
 }
 
+var Config struct {
+	Exclude struct {
+		Absolute     []string
+		RootRelative []string
+		Anywhere     []string
+	}
+}
+
 var LocationTimeFormat, _ = strftime.New("%Y-%m-%d %H-%M-%S")

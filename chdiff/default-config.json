@@ -1,0 +1,11 @@
+{
+    "exclude": {
+        "prefixAbsolute": [
+            "C:\\System Volume Information"
+        ],
+        "prefixRootRelative": [
+            ".chdiff.txt"
+        ],
+        "suffixAnywhere": []
+    }
+}
