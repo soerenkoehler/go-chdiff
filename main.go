@@ -47,5 +47,11 @@ func (*DefaultDependencies) KongExit() func(int) {
 }
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			os.Exit(1)
+		}
+	}()
+
 	chdiff.Chdiff(_Version, os.Args, &DefaultDependencies{})
 }
