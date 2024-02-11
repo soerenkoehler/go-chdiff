@@ -126,8 +126,8 @@ func (context digestContext) pathExcluded(path string) bool {
 	}
 
 	return matchAnyPattern(path, common.Config.Exclude.Absolute) ||
-		matchAnyPattern(relPath, common.Config.Exclude.RootRelative) ||
-		matchAnyPattern(filepath.Base(path), common.Config.Exclude.Anywhere)
+		matchAnyPattern(relPath, common.Config.Exclude.Relative) ||
+		matchAnyPattern(filepath.Base(relPath), common.Config.Exclude.Anywhere)
 }
 
 func matchAnyPattern(path string, patterns []string) bool {

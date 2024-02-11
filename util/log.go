@@ -26,6 +26,15 @@ var logPrefixe = map[LogLevel]string{
 	LOG_FATAL: `/!\ `,
 }
 
+var levelNames = map[string]LogLevel{
+	"debug": LOG_DEBUG,
+	"info":  LOG_INFO,
+	"warn":  LOG_WARN,
+	"error": LOG_ERROR,
+	"fatal": LOG_FATAL,
+	"none":  LOG_NONE,
+}
+
 var minLevel = LOG_INFO
 
 func InitLogger(writer io.Writer) {
@@ -35,6 +44,12 @@ func InitLogger(writer io.Writer) {
 
 func SetLogLevel(newLevel LogLevel) {
 	minLevel = newLevel
+}
+
+func SetLogLevelByName(newLevelName string) {
+	if newLevel, ok := levelNames[strings.ToLower(newLevelName)]; ok {
+		SetLogLevel(newLevel)
+	}
 }
 
 func Log(aktLevel LogLevel, format string, v ...any) string {
