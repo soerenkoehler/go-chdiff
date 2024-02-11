@@ -24,7 +24,7 @@ var (
 	_description string
 
 	//go:embed default-config.json
-	_defaultConfigJson string
+	_defaultConfigJson []byte
 )
 
 type cmdDigest struct {
@@ -110,7 +110,7 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 
 func loadConfig() {
 	if err := json.Unmarshal(readConfigFile(), &common.Config); err != nil {
-		util.Fatal(err.Error())
+		util.Fatal("reading config: %s", err.Error())
 	}
 	util.SetLogLevelByName(common.Config.LogLevel)
 	util.Debug("%+v", common.Config)
@@ -120,13 +120,14 @@ func readConfigFile() []byte {
 	userhome, err := os.UserHomeDir()
 	if err != nil {
 		util.Warn("can't determine user home")
-		return []byte(_defaultConfigJson)
+		return _defaultConfigJson
 	}
 
-	data, err := os.ReadFile(filepath.Join(userhome, UserConfigFileName))
+	configFile := filepath.Join(userhome, UserConfigFileName)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
-		util.Warn("can't read user config: %v", err)
-		return []byte(_defaultConfigJson)
+		os.WriteFile(configFile, _defaultConfigJson, 0744)
+		return _defaultConfigJson
 	}
 
 	return data

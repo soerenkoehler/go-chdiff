@@ -59,7 +59,7 @@ func (m *MockDependencies) KongExit() func(int) {
 	return m.Called().Get(0).(func(int))
 }
 
-type TestSuite struct {
+type TSChdiff struct {
 	suite.Suite
 	Stdout       *strings.Builder
 	Stderr       *strings.Builder
@@ -67,10 +67,10 @@ type TestSuite struct {
 }
 
 func TestSuiteRunner(t *testing.T) {
-	suite.Run(t, &TestSuite{})
+	suite.Run(t, &TSChdiff{})
 }
 
-func (s *TestSuite) SetupTest() {
+func (s *TSChdiff) SetupTest() {
 	s.Stdout = &strings.Builder{}
 	s.Stderr = &strings.Builder{}
 	s.Dependencies = &MockDependencies{}
@@ -83,7 +83,7 @@ func (s *TestSuite) SetupTest() {
 		})
 }
 
-func (s *TestSuite) TestLoadConfig() {
+func (s *TSChdiff) TestLoadConfig() {
 	s.T().Setenv("HOME", "../testdata/chdiff/userhome")
 	s.Dependencies.Mock.On("exit", mock.Anything).Return()
 
@@ -95,7 +95,22 @@ func (s *TestSuite) TestLoadConfig() {
 		"[D] {Exclude:{Absolute:[] Relative:[] Anywhere:[]} LogLevel:debug}")
 }
 
-func (s *TestSuite) TestLoadConfigBadUserHome() {
+func (s *TSChdiff) TestLoadConfigCreateMissingFile() {
+	tempUserhome := s.T().TempDir()
+	s.T().Setenv("HOME", tempUserhome)
+	s.Dependencies.Mock.On("exit", mock.Anything).Return()
+
+	chdiff.Chdiff("TEST", []string{""}, s.Dependencies)
+
+	s.Dependencies.AssertExpectations(s.T())
+	assert.FileExists(s.T(), filepath.Join(tempUserhome, chdiff.UserConfigFileName))
+	assert.Contains(
+		s.T(), s.Stderr.String(),
+		// Attention: Kong's error message contains double space between commands
+		"error: expected one of \"create\",  \"verify\"\n")
+}
+
+func (s *TSChdiff) TestLoadConfigBadUserhome() {
 	s.T().Setenv("HOME", "")
 	s.Dependencies.Mock.On("exit", mock.Anything).Return()
 
@@ -107,29 +122,30 @@ func (s *TestSuite) TestLoadConfigBadUserHome() {
 		"[W] can't determine user home")
 }
 
-func (s *TestSuite) TestLoadConfigBadJson() {
+func (s *TSChdiff) TestLoadConfigBadJson() {
 	s.T().Setenv("HOME", "../testdata/chdiff/userhome-with-bad-config")
 	s.Dependencies.Mock.On("exit", mock.Anything).Return()
 
-	assert.PanicsWithError(s.T(), `/!\ invalid character 'i' looking for beginning of value`, func() {
-		chdiff.Chdiff("TEST", []string{""}, s.Dependencies)
-	})
+	assert.PanicsWithError(s.T(),
+		`/!\ reading config: invalid character 'i' looking for beginning of value`, func() {
+			chdiff.Chdiff("TEST", []string{""}, s.Dependencies)
+		})
 }
 
-func (s *TestSuite) TestNoCommand() {
+func (s *TSChdiff) TestNoCommand() {
 	testErrorMessage(s,
 		[]string{""},
 		// Attention: Kong's error message contains double space between commands
 		"error: expected one of \"create\",  \"verify\"\n")
 }
 
-func (s *TestSuite) TestUnknownCommand() {
+func (s *TSChdiff) TestUnknownCommand() {
 	testErrorMessage(s,
 		[]string{"", "bad-command"},
 		"error: unexpected argument bad-command\n")
 }
 
-func (s *TestSuite) TestVerifyWithoutPath() {
+func (s *TSChdiff) TestVerifyWithoutPath() {
 	testDigestVerify(s,
 		[]string{"", "v"},
 		".",
@@ -137,7 +153,7 @@ func (s *TestSuite) TestVerifyWithoutPath() {
 		digest.SHA256)
 }
 
-func (s *TestSuite) TestVerifyWithPath() {
+func (s *TSChdiff) TestVerifyWithPath() {
 	testDigestVerify(s,
 		[]string{"", "v", "x"},
 		"x",
@@ -145,7 +161,7 @@ func (s *TestSuite) TestVerifyWithPath() {
 		digest.SHA256)
 }
 
-func (s *TestSuite) TestDigestVerifyMissingDigestFile() {
+func (s *TSChdiff) TestDigestVerifyMissingDigestFile() {
 
 	absDataPath, _ := filepath.Abs("x")
 	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
@@ -162,7 +178,7 @@ func (s *TestSuite) TestDigestVerifyMissingDigestFile() {
 	assert.Contains(s.T(), s.Stderr.String(), "[E] read error")
 }
 
-func (s *TestSuite) TestDigestCreateSHA256DefaultName() {
+func (s *TSChdiff) TestDigestCreateSHA256DefaultName() {
 	absDataPath, _ := filepath.Abs("x")
 	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
 
@@ -175,7 +191,7 @@ func (s *TestSuite) TestDigestCreateSHA256DefaultName() {
 	s.Dependencies.AssertExpectations(s.T())
 }
 
-func (s *TestSuite) TestDigestCreateSHA256ExplicitName() {
+func (s *TSChdiff) TestDigestCreateSHA256ExplicitName() {
 	absDataPath, _ := filepath.Abs("x")
 	absDigestPath, _ := filepath.Abs("y")
 	absDigestFile := filepath.Join(absDigestPath, "explicit")
@@ -189,7 +205,7 @@ func (s *TestSuite) TestDigestCreateSHA256ExplicitName() {
 	s.Dependencies.AssertExpectations(s.T())
 }
 
-func (s *TestSuite) TestDigestCreateSHA512() {
+func (s *TSChdiff) TestDigestCreateSHA512() {
 	absDataPath, _ := filepath.Abs("x")
 	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
 
@@ -202,7 +218,7 @@ func (s *TestSuite) TestDigestCreateSHA512() {
 	s.Dependencies.AssertExpectations(s.T())
 }
 
-func (s *TestSuite) TestDigestCreateBadAlgorithm() {
+func (s *TSChdiff) TestDigestCreateBadAlgorithm() {
 	s.Dependencies.Mock.On("exit", mock.Anything).Return()
 
 	chdiff.Chdiff("TEST", []string{"", "c", "-a", "WRONG", "x"}, s.Dependencies)
@@ -212,7 +228,7 @@ func (s *TestSuite) TestDigestCreateBadAlgorithm() {
 }
 
 func testErrorMessage(
-	s *TestSuite,
+	s *TSChdiff,
 	args []string,
 	expected string) {
 
@@ -225,7 +241,7 @@ func testErrorMessage(
 }
 
 func testDigestVerify(
-	s *TestSuite,
+	s *TSChdiff,
 	args []string,
 	dataPath, digestPath string,
 	algorithm digest.HashType) {
