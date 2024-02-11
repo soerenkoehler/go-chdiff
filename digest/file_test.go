@@ -12,40 +12,40 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type TestSuiteFile struct {
+type TSFile struct {
 	suite.Suite
 }
 
 func TestSuiteFileRunner(t *testing.T) {
-	suite.Run(t, &TestSuiteFile{})
+	suite.Run(t, &TSFile{})
 }
 
-func (s *TestSuiteFile) SetupTest() {
+func (s *TSFile) SetupTest() {
 }
 
-func (s *TestSuiteFile) TestLoadNonexistantFile() {
+func (s *TSFile) TestLoadNonexistantFile() {
 	path := "../testdata/digest/file"
 	file := filepath.Join(path, "nonexistant-digest-file.txt")
 	_, err := digest.Load(path, file)
 	assert.EqualError(s.T(), err, fmt.Sprintf("lstat %v: no such file or directory", file))
 }
 
-func (s *TestSuiteFile) TestLoadBadDigest1Column() {
+func (s *TSFile) TestLoadBadDigest1Column() {
 	path := "../testdata/digest/file"
 	file := filepath.Join(path, "bad-digest-1-column.txt")
 	_, err := digest.Load(path, file)
 	assert.EqualError(s.T(), err, "invalid digest file")
 }
 
-func (s *TestSuiteFile) TestSaveLoad256() {
+func (s *TSFile) TestSaveLoad256() {
 	s.testSaveLoad(32)
 }
 
-func (s *TestSuiteFile) TestSaveLoad512() {
+func (s *TSFile) TestSaveLoad512() {
 	s.testSaveLoad(64)
 }
 
-func (s *TestSuiteFile) testSaveLoad(hashsize int) {
+func (s *TSFile) testSaveLoad(hashsize int) {
 	digestPath := s.T().TempDir()
 	digestTime := time.Now()
 	digestFile := filepath.Join(digestPath, "test-digest.txt")

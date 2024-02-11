@@ -27,32 +27,32 @@ var (
 	digestTime2 time.Time = time.Date(2022, 1, 2, 13, 14, 15, 0, time.Local)
 )
 
-type TestSuite struct {
+type TSComparator struct {
 	suite.Suite
 	Stdout *strings.Builder
 }
 
 func TestSuiteRunner(t *testing.T) {
-	suite.Run(t, &TestSuite{})
+	suite.Run(t, &TSComparator{})
 }
 
-func (s *TestSuite) SetupTest() {
+func (s *TSComparator) SetupTest() {
 	s.Stdout = &strings.Builder{}
 }
 
-func (s *TestSuite) TestOutputEmptyDiff() {
+func (s *TSComparator) TestOutputEmptyDiff() {
 	diff.Print(s.Stdout, makeDiff(s, 0, 0, 0, 0))
 
 	expect(s, []string{}, 0, 0, 0, 0)
 }
 
-func (s *TestSuite) TestOutputNoChanges() {
+func (s *TSComparator) TestOutputNoChanges() {
 	diff.Print(s.Stdout, makeDiff(s, 2, 0, 0, 0))
 
 	expect(s, []string{}, 2, 0, 0, 0)
 }
 
-func (s *TestSuite) TestOutputWithChanges() {
+func (s *TSComparator) TestOutputWithChanges() {
 	diff.Print(s.Stdout, makeDiff(s, 0, 3, 5, 7))
 
 	expect(s, []string{
@@ -74,7 +74,7 @@ func (s *TestSuite) TestOutputWithChanges() {
 	}, 0, 3, 5, 7)
 }
 
-func (s *TestSuite) TestCompare() {
+func (s *TSComparator) TestCompare() {
 	diff.Print(s.Stdout, diff.Compare(
 		makeDigest(s, digestPath1, digestFile1, digestTime1),
 		makeDigest(s, digestPath2, digestFile2, digestTime2)))
@@ -87,7 +87,7 @@ func (s *TestSuite) TestCompare() {
 		}, 1, 1, 1, 1)
 }
 
-func makeDiff(s *TestSuite, identical, modified, added, removed int32) diff.Diff {
+func makeDiff(s *TSComparator, identical, modified, added, removed int32) diff.Diff {
 	result := diff.Diff{
 		LocationA: common.Location{
 			Path: digestPath1,
@@ -114,7 +114,7 @@ func makeDiff(s *TestSuite, identical, modified, added, removed int32) diff.Diff
 	return result
 }
 
-func expect(s *TestSuite, entries []string, identical, modified, added, removed int32) {
+func expect(s *TSComparator, entries []string, identical, modified, added, removed int32) {
 	// for non-empty entries list require a final newline
 	entriesText := strings.Join(append(entries, ""), "\n")
 
@@ -132,7 +132,7 @@ func expect(s *TestSuite, entries []string, identical, modified, added, removed 
 	}
 }
 
-func makeDigest(s *TestSuite, digestPath, digestFile string, modTime time.Time) digest.Digest {
+func makeDigest(s *TSComparator, digestPath, digestFile string, modTime time.Time) digest.Digest {
 	os.Chtimes(digestFile, modTime, modTime)
 	result, err := digest.Load(digestPath, digestFile)
 	if err != nil {

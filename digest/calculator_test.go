@@ -22,20 +22,20 @@ type testCase struct {
 	inDigest bool
 }
 
-type TestSuiteCalculator struct {
+type TSCalculator struct {
 	suite.Suite
 	root string
 }
 
 func TestSuiteRunner(t *testing.T) {
-	suite.Run(t, &TestSuiteCalculator{})
+	suite.Run(t, &TSCalculator{})
 }
 
-func (s *TestSuiteCalculator) SetupTest() {
+func (s *TSCalculator) SetupTest() {
 	s.root = s.T().TempDir()
 }
 
-func (s *TestSuiteCalculator) TestDigest256() {
+func (s *TSCalculator) TestDigest256() {
 	s.verifyDigest([]testCase{{
 		path:     "zero",
 		size:     0,
@@ -57,7 +57,7 @@ func (s *TestSuiteCalculator) TestDigest256() {
 	}}, digest.SHA256)
 }
 
-func (s *TestSuiteCalculator) TestDigest512() {
+func (s *TSCalculator) TestDigest512() {
 	s.verifyDigest([]testCase{{
 		path:     "zero",
 		size:     0,
@@ -79,7 +79,7 @@ func (s *TestSuiteCalculator) TestDigest512() {
 	}}, digest.SHA512)
 }
 
-func (s *TestSuiteCalculator) TestExclude() {
+func (s *TSCalculator) TestExclude() {
 	common.Config.Exclude.Absolute = []string{filepath.Join(s.root, "excludeAbs")}
 	common.Config.Exclude.Relative = []string{"excludeRel"}
 	common.Config.Exclude.Anywhere = []string{"excludeAny"}
@@ -129,7 +129,7 @@ func (s *TestSuiteCalculator) TestExclude() {
 	}}, digest.SHA256)
 }
 
-func (s *TestSuiteCalculator) verifyDigest(
+func (s *TSCalculator) verifyDigest(
 	testdata []testCase,
 	algorithm digest.HashType) {
 
@@ -150,7 +150,7 @@ func (s *TestSuiteCalculator) verifyDigest(
 }
 
 func createData(
-	s *TestSuiteCalculator,
+	s *TSCalculator,
 	testdata []testCase) {
 
 	for _, dataPoint := range testdata {
