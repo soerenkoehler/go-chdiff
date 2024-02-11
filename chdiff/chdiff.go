@@ -3,7 +3,6 @@ package chdiff
 import (
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -94,7 +93,8 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 		defaultDigestFile(cmd.cmdDigest))
 
 	if err != nil {
-		util.Fatal(err.Error())
+		util.Error(err.Error())
+		return err
 	}
 
 	deps.DiffPrint(
@@ -112,19 +112,20 @@ func loadConfig() {
 	if err := json.Unmarshal(readConfigFile(), &common.Config); err != nil {
 		util.Fatal(err.Error())
 	}
-	fmt.Printf("%+v\n", &common.Config) // TODO
+	util.SetLogLevelByName(common.Config.LogLevel)
+	util.Debug("%+v", common.Config)
 }
 
 func readConfigFile() []byte {
 	userhome, err := os.UserHomeDir()
 	if err != nil {
-		util.Debug("can't determine user home")
+		util.Warn("can't determine user home")
 		return []byte(_defaultConfigJson)
 	}
 
 	data, err := os.ReadFile(filepath.Join(userhome, UserConfigFileName))
 	if err != nil {
-		util.Debug("can't read user config")
+		util.Warn("can't read user config: %v", err)
 		return []byte(_defaultConfigJson)
 	}
 
