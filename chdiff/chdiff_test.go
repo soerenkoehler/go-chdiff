@@ -1,6 +1,7 @@
 package chdiff_test
 
 import (
+	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -144,7 +145,24 @@ func (s *TestSuite) TestVerifyWithPath() {
 		digest.SHA256)
 }
 
-func (s *TestSuite) xTestDigestCreateSHA256DefaultName() {
+func (s *TestSuite) TestDigestVerifyMissingDigestFile() {
+
+	absDataPath, _ := filepath.Abs("x")
+	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
+
+	s.Dependencies.
+		On("exit", mock.Anything).Return().
+		On("DigestRead", absDataPath, absDigestFile).Return(
+		digest.Digest{},
+		fmt.Errorf("read error"))
+
+	chdiff.Chdiff("TEST", []string{"", "v", "x"}, s.Dependencies)
+
+	s.Dependencies.AssertExpectations(s.T())
+	assert.Contains(s.T(), s.Stderr.String(), "[E] read error")
+}
+
+func (s *TestSuite) TestDigestCreateSHA256DefaultName() {
 	absDataPath, _ := filepath.Abs("x")
 	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
 
@@ -157,7 +175,7 @@ func (s *TestSuite) xTestDigestCreateSHA256DefaultName() {
 	s.Dependencies.AssertExpectations(s.T())
 }
 
-func (s *TestSuite) xTestDigestCreateSHA256ExplicitName() {
+func (s *TestSuite) TestDigestCreateSHA256ExplicitName() {
 	absDataPath, _ := filepath.Abs("x")
 	absDigestPath, _ := filepath.Abs("y")
 	absDigestFile := filepath.Join(absDigestPath, "explicit")
@@ -171,7 +189,7 @@ func (s *TestSuite) xTestDigestCreateSHA256ExplicitName() {
 	s.Dependencies.AssertExpectations(s.T())
 }
 
-func (s *TestSuite) xTestDigestCreateSHA512() {
+func (s *TestSuite) TestDigestCreateSHA512() {
 	absDataPath, _ := filepath.Abs("x")
 	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
 
@@ -184,7 +202,7 @@ func (s *TestSuite) xTestDigestCreateSHA512() {
 	s.Dependencies.AssertExpectations(s.T())
 }
 
-func (s *TestSuite) xTestDigestCreateBadAlgorithm() {
+func (s *TestSuite) TestDigestCreateBadAlgorithm() {
 	s.Dependencies.Mock.On("exit", mock.Anything).Return()
 
 	chdiff.Chdiff("TEST", []string{"", "c", "-a", "WRONG", "x"}, s.Dependencies)
