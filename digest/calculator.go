@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -95,7 +97,9 @@ func (context digestContext) processDir(dir string) {
 }
 
 func (context digestContext) processFile(file string) {
-	relativePath, err := filepath.Rel(context.rootPath, file)
+	chain(func() (string, error){
+		return filepath.Rel(context.rootPath, file)
+	}, func(file))
 	if err != nil {
 		util.Error(err.Error())
 		return
@@ -119,15 +123,13 @@ func (context digestContext) processFile(file string) {
 }
 
 func (context digestContext) pathExcluded(path string) bool {
-	relPath, err := filepath.Rel(context.rootPath, path)
-	if err != nil {
-		util.Error(err.Error())
-		return false
-	}
-
-	return matchAnyPattern(path, common.Config.Exclude.Absolute) ||
-		matchAnyPattern(relPath, common.Config.Exclude.Relative) ||
-		matchAnyPattern(filepath.Base(relPath), common.Config.Exclude.Anywhere)
+	return chain(func() (string, error) {
+		return filepath.Rel(context.rootPath, path)
+	}, func(relPath string) bool {
+		return matchAnyPattern(path, common.Config.Exclude.Absolute) ||
+			matchAnyPattern(relPath, common.Config.Exclude.Relative) ||
+			matchAnyPattern(filepath.Base(relPath), common.Config.Exclude.Anywhere)
+	}, false)
 }
 
 func matchAnyPattern(path string, patterns []string) bool {
@@ -140,12 +142,9 @@ func matchAnyPattern(path string, patterns []string) bool {
 }
 
 func matchPattern(path, pattern string) bool {
-	match, err := filepath.Match(pattern, path)
-	if err != nil {
-		util.Error(err.Error())
-		return false
-	}
-	return match
+	return chain(func() (bool, error) {
+		return filepath.Match(pattern, path)
+	}, identity[bool], false)
 }
 
 func getNewHash(algorithm HashType) hash.Hash {
@@ -157,4 +156,24 @@ func getNewHash(algorithm HashType) hash.Hash {
 	default:
 		return sha256.New()
 	}
+}
+
+func chain[T any](err error, errVal T, f ...func()) {
+	while() {
+
+	}
+}
+
+func chainx[T, U any](f func() (T, error), g func(in T) U, errVal U) U {
+	first_result, err := f()
+	if err == nil {
+		return g(first_result)
+	} else {
+		util.Error(err.Error())
+		return errVal
+	}
+}
+
+func identity[T any](in T) T {
+	return in
 }
