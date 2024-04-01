@@ -3,8 +3,11 @@ package digest
 import (
 	"bufio"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
+
+	"github.com/soerenkoehler/go-chdiff/util"
 )
 
 const SEPARATOR_TEXT = "  "
@@ -15,48 +18,59 @@ type Reader func(digestRootPath, digestFile string) (Digest, error)
 type Writer func(digest Digest, digestFile string) error
 
 func Load(digestPath, digestFile string) (Digest, error) {
+	var fileInfo fs.FileInfo
+	var input *os.File
+	var digest Digest
 
-	digestFileInfo, err := os.Lstat(digestFile)
-	if err != nil {
-		// hack for better error message under Windows
-		err.(*os.PathError).Op = "lstat"
-		return Digest{}, err
-	}
+	chain := &util.ChainContext{}
 
-	digest := NewDigest(digestPath, digestFileInfo.ModTime().Local())
+	chain.Chain(func() {
+		fileInfo, chain.Err = os.Lstat(digestFile)
+		hackLstatErrorForWindow(&chain.Err)
+	}).Chain(func() {
+		input, chain.Err = os.Open(digestFile)
+	}).Chain(func() {
+		defer input.Close()
 
-	input, err := os.Open(digestFile)
-	if err != nil {
-		return Digest{}, err
-	}
+		digest = NewDigest(digestPath, fileInfo.ModTime().Local())
 
-	defer input.Close()
-
-	lines := bufio.NewScanner(input)
-	for lines.Scan() {
-		normalized := strings.Replace(lines.Text(), SEPARATOR_TEXT, SEPARATOR_BINARY, 1)
-		tokens := strings.SplitN(normalized, SEPARATOR_BINARY, 2)
-		if len(tokens) != 2 {
-			return Digest{}, fmt.Errorf("invalid digest file")
+		lines := bufio.NewScanner(input)
+		for lines.Scan() {
+			normalized := strings.Replace(lines.Text(), SEPARATOR_TEXT, SEPARATOR_BINARY, 1)
+			tokens := strings.SplitN(normalized, SEPARATOR_BINARY, 2)
+			if len(tokens) != 2 {
+				chain.Err = fmt.Errorf("invalid digest file")
+				return
+			}
+			digest.AddFileHash(tokens[1], tokens[0])
 		}
-		digest.AddFileHash(tokens[1], tokens[0])
-	}
+	})
 
-	return digest, nil
+	return digest, chain.Err
+}
+
+// hack for better error message under Windows
+func hackLstatErrorForWindow(err *error) {
+	if *err != nil {
+		(*err).(*os.PathError).Op = "lstat"
+	}
 }
 
 func Save(digest Digest, digestFile string) error {
-	output, err := os.Create(digestFile)
-	if err != nil {
-		return err
-	}
+	var output *os.File
 
-	defer output.Close()
+	chain := &util.ChainContext{}
 
-	for k, v := range *digest.Entries {
-		fmt.Fprintf(output, "%v%v%v\n", v, SEPARATOR_BINARY, k)
-	}
-	os.Chtimes(digestFile, digest.Location.Time, digest.Location.Time)
+	chain.Chain(func() {
+		output, chain.Err = os.Create(digestFile)
+	}).Chain(func() {
+		defer output.Close()
 
-	return nil
+		for k, v := range *digest.Entries {
+			fmt.Fprintf(output, "%v%v%v\n", v, SEPARATOR_BINARY, k)
+		}
+		os.Chtimes(digestFile, digest.Location.Time, digest.Location.Time)
+	})
+
+	return chain.Err
 }

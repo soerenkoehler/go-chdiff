@@ -6,10 +6,9 @@ import (
 	"encoding/hex"
 	"hash"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -47,13 +46,15 @@ func Calculate(
 	go func() {
 		defer close(context.digest)
 
-		absPath, err := filepath.Abs(context.rootPath)
-		if err != nil {
-			util.Fatal(err.Error())
-		}
+		var absPath string
 
-		context.processPath(absPath)
-		context.waitGroup.Wait()
+		chain := &util.ChainContext{}
+		chain.Chain(func() {
+			absPath, chain.Err = filepath.Abs(context.rootPath)
+		}).Chain(func() {
+			context.processPath(absPath)
+			context.waitGroup.Wait()
+		}).ChainFatal("calculate")
 	}()
 
 	result := NewDigest(rootPath, time.Now())
@@ -85,51 +86,54 @@ func (context digestContext) processPath(path string) {
 }
 
 func (context digestContext) processDir(dir string) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		util.Error(err.Error())
-		return
-	}
+	var entries []fs.DirEntry
 
-	for _, entry := range entries {
-		context.processPath(filepath.Join(dir, entry.Name()))
-	}
+	chain := &util.ChainContext{}
+	chain.Chain(func() {
+		entries, chain.Err = os.ReadDir(dir)
+	}).Chain(func() {
+		for _, entry := range entries {
+			context.processPath(filepath.Join(dir, entry.Name()))
+		}
+	}).ChainError("process dir")
 }
 
 func (context digestContext) processFile(file string) {
-	chain(func() (string, error){
-		return filepath.Rel(context.rootPath, file)
-	}, func(file))
-	if err != nil {
-		util.Error(err.Error())
-		return
-	}
+	var relativePath string
+	var input *os.File
 
-	input, err := os.Open(file)
-	if err != nil {
-		util.Error(err.Error())
-		return
-	}
+	chain := &util.ChainContext{}
+	chain.Chain(func() {
+		relativePath, chain.Err = filepath.Rel(context.rootPath, file)
+	}).Chain(func() {
+		input, chain.Err = os.Open(file)
+	}).Chain(func() {
+		defer input.Close()
 
-	defer input.Close()
+		hash := getNewHash(context.algorithm)
+		io.Copy(hash, input)
 
-	hash := getNewHash(context.algorithm)
-	io.Copy(hash, input)
-
-	context.digest <- digestEntry{
-		file: relativePath,
-		hash: hex.EncodeToString(hash.Sum(nil)),
-	}
+		context.digest <- digestEntry{
+			file: relativePath,
+			hash: hex.EncodeToString(hash.Sum(nil)),
+		}
+	}).ChainError("process file")
 }
 
 func (context digestContext) pathExcluded(path string) bool {
-	return chain(func() (string, error) {
-		return filepath.Rel(context.rootPath, path)
-	}, func(relPath string) bool {
-		return matchAnyPattern(path, common.Config.Exclude.Absolute) ||
-			matchAnyPattern(relPath, common.Config.Exclude.Relative) ||
-			matchAnyPattern(filepath.Base(relPath), common.Config.Exclude.Anywhere)
-	}, false)
+	var relativePath string
+	var result bool
+
+	chain := &util.ChainContext{}
+	chain.Chain(func() {
+		relativePath, chain.Err = filepath.Rel(context.rootPath, path)
+	}).Chain(func() {
+		result = matchAnyPattern(path, common.Config.Exclude.Absolute) ||
+			matchAnyPattern(relativePath, common.Config.Exclude.Relative) ||
+			matchAnyPattern(filepath.Base(relativePath), common.Config.Exclude.Anywhere)
+	}).ChainError("filter path")
+
+	return result
 }
 
 func matchAnyPattern(path string, patterns []string) bool {
@@ -142,9 +146,14 @@ func matchAnyPattern(path string, patterns []string) bool {
 }
 
 func matchPattern(path, pattern string) bool {
-	return chain(func() (bool, error) {
-		return filepath.Match(pattern, path)
-	}, identity[bool], false)
+	var chain util.ChainContext
+	var result bool
+
+	chain.Chain(func() {
+		result, chain.Err = filepath.Match(pattern, path)
+	}).ChainError("match path")
+
+	return result
 }
 
 func getNewHash(algorithm HashType) hash.Hash {
@@ -156,24 +165,4 @@ func getNewHash(algorithm HashType) hash.Hash {
 	default:
 		return sha256.New()
 	}
-}
-
-func chain[T any](err error, errVal T, f ...func()) {
-	while() {
-
-	}
-}
-
-func chainx[T, U any](f func() (T, error), g func(in T) U, errVal U) U {
-	first_result, err := f()
-	if err == nil {
-		return g(first_result)
-	} else {
-		util.Error(err.Error())
-		return errVal
-	}
-}
-
-func identity[T any](in T) T {
-	return in
 }

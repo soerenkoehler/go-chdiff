@@ -88,32 +88,34 @@ func (cmd *CmdCreate) Run(deps ChdiffDependencies) error {
 }
 
 func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
-	oldDigest, err := deps.DigestRead(
-		cmd.RootPath,
-		defaultDigestFile(cmd.cmdDigest))
+	var chain util.ChainContext
+	var oldDigest digest.Digest
 
-	if err != nil {
-		util.Error(err.Error())
-		return err
-	}
+	chain.Chain(func() {
+		oldDigest, chain.Err = deps.DigestRead(
+			cmd.RootPath,
+			defaultDigestFile(cmd.cmdDigest))
+	}).Chain(func() {
+		deps.DiffPrint(
+			deps.Stdout(),
+			deps.DigestCompare(
+				oldDigest,
+				deps.DigestCalculate(
+					cmd.RootPath,
+					oldDigest.Algorithm)))
+	}).ChainError("verify")
 
-	deps.DiffPrint(
-		deps.Stdout(),
-		deps.DigestCompare(
-			oldDigest,
-			deps.DigestCalculate(
-				cmd.RootPath,
-				oldDigest.Algorithm)))
-
-	return nil
+	return chain.Err
 }
 
 func loadConfig() {
-	if err := json.Unmarshal(readConfigFile(), &common.Config); err != nil {
-		util.Fatal("reading config: %s", err.Error())
-	}
-	util.SetLogLevelByName(common.Config.LogLevel)
-	util.Debug("%+v", common.Config)
+	chain := &util.ChainContext{}
+	chain.Chain(func() {
+		chain.Err = json.Unmarshal(readConfigFile(), &common.Config)
+	}).Chain(func() {
+		util.SetLogLevelByName(common.Config.LogLevel)
+		util.Debug("%+v", common.Config)
+	}).ChainFatal("reading config")
 }
 
 func readConfigFile() []byte {

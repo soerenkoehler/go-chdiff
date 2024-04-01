@@ -170,12 +170,12 @@ func (s *TSChdiff) TestDigestVerifyMissingDigestFile() {
 		On("exit", mock.Anything).Return().
 		On("DigestRead", absDataPath, absDigestFile).Return(
 		digest.Digest{},
-		fmt.Errorf("read error"))
+		fmt.Errorf("no such file"))
 
 	chdiff.Chdiff("TEST", []string{"", "v", "x"}, s.Dependencies)
 
 	s.Dependencies.AssertExpectations(s.T())
-	assert.Contains(s.T(), s.Stderr.String(), "[E] read error")
+	assert.Contains(s.T(), s.Stderr.String(), "[E] verify: no such file")
 }
 
 func (s *TSChdiff) TestDigestCreateSHA256DefaultName() {
