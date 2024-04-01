@@ -1,48 +1,3 @@
-<<<<<<< HEAD
-name: Go-Util-Build
-
-on:
-  push
-
-jobs:
-  build-and-release:
-    name: Build And Release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Setup Go environment
-        uses: actions/setup-go@v4.0.1
-        with:
-<<<<<<<< HEAD:.github/workflows/go-util-build.yml
-          go-version: "1.20"
-|||||||| parent of b5bd994 (squashed WIP):.github/workflows/simpson-build-and-release-tool.yml
-          go-version: 1.16
-========
-          go-version: 1.17
->>>>>>>> b5bd994 (squashed WIP):.github/workflows/go-simpson-build.yml
-
-      - name: Checkout
-        uses: actions/checkout@v3.5.3
-
-      - name: Setup Environment
-        run: |
-          echo 'GITHUB_CONTEXT<<EOF' >>$GITHUB_ENV
-          echo '${{toJson(github)}}' >>$GITHUB_ENV
-          echo 'EOF' >>$GITHUB_ENV
-          echo 'GOPROXY=direct' >>$GITHUB_ENV
-
-      - name: Build
-        run: |
-<<<<<<<< HEAD:.github/workflows/go-util-build.yml
-          go run github.com/soerenkoehler/go-util-build@main --artifact-name=chdiff
-|||||||| parent of b5bd994 (squashed WIP):.github/workflows/simpson-build-and-release-tool.yml
-          go get github.com/soerenkoehler/simpson@main
-          go run github.com/soerenkoehler/simpson --all-targets --latest --artifact-name chdiff
-========
-          go run github.com/soerenkoehler/go-simpson@main --artifact-name chdiff
->>>>>>>> b5bd994 (squashed WIP):.github/workflows/go-simpson-build.yml
-||||||| parent of cf48265 (update workflowfile)
-=======
 name: Go-Util-Build
 
 on:
@@ -71,11 +26,4 @@ jobs:
 
       - name: Build
         run: |
-<<<<<<< HEAD
-          go run github.com/soerenkoehler/go-util-build@main 
->>>>>>> cf48265 (update workflowfile)
-||||||| parent of 2454d25 (fix build.yml)
-          go run github.com/soerenkoehler/go-util-build@main 
-=======
           go run github.com/soerenkoehler/go-util-build@main --artifact-name=chdiff
->>>>>>> 2454d25 (fix build.yml)
