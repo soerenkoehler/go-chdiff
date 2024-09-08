@@ -1,3 +1,4 @@
 *.out
+coverage.*
 __debug_bin
 **/artifacts
