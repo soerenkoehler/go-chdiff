@@ -1,0 +1,11 @@
+{
+    "exclude": {
+        "absolute": [
+            "C:\\System Volume Information"
+        ],
+        "relative": [
+            ".chdiff.txt"
+        ],
+        "anywhere": []
+    }
+}
