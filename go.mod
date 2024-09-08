@@ -1,6 +1,6 @@
 module github.com/soerenkoehler/go-chdiff
 
-go 1.23
+go 1.23.0
 
 require (
 	github.com/alecthomas/kong v0.9.0
