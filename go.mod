@@ -3,7 +3,7 @@ module github.com/soerenkoehler/go-chdiff
 go 1.23.0
 
 require (
-	github.com/alecthomas/kong v0.9.0
+	github.com/alecthomas/kong v1.3.0
 	github.com/google/go-cmp v0.6.0
 	github.com/lestrrat-go/strftime v1.1.0
 	github.com/stretchr/testify v1.9.0
