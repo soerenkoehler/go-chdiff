@@ -104,10 +104,6 @@ func (s *TSChdiff) TestLoadConfigCreateMissingFile() {
 
 	s.Dependencies.AssertExpectations(s.T())
 	assert.FileExists(s.T(), filepath.Join(tempUserhome, chdiff.UserConfigFileName))
-	assert.Contains(
-		s.T(), s.Stderr.String(),
-		// Attention: Kong's error message contains double space between commands
-		"error: expected one of \"create\",  \"verify\"\n")
 }
 
 func (s *TSChdiff) TestLoadConfigBadUserhome() {
@@ -135,8 +131,7 @@ func (s *TSChdiff) TestLoadConfigBadJson() {
 func (s *TSChdiff) TestNoCommand() {
 	testErrorMessage(s,
 		[]string{""},
-		// Attention: Kong's error message contains double space between commands
-		"error: expected one of \"create\",  \"verify\"\n")
+		"error: expected one of \"create\", \"verify\"\n")
 }
 
 func (s *TSChdiff) TestUnknownCommand() {
@@ -148,17 +143,13 @@ func (s *TSChdiff) TestUnknownCommand() {
 func (s *TSChdiff) TestVerifyWithoutPath() {
 	testDigestVerify(s,
 		[]string{"", "v"},
-		".",
-		chdiff.DefaultDigestName,
-		digest.SHA256)
+		".")
 }
 
 func (s *TSChdiff) TestVerifyWithPath() {
 	testDigestVerify(s,
 		[]string{"", "v", "x"},
-		"x",
-		chdiff.DefaultDigestName,
-		digest.SHA256)
+		"x")
 }
 
 func (s *TSChdiff) TestDigestVerifyMissingDigestFile() {
@@ -243,8 +234,7 @@ func testErrorMessage(
 func testDigestVerify(
 	s *TSChdiff,
 	args []string,
-	dataPath, digestPath string,
-	algorithm digest.HashType) {
+	dataPath string) {
 
 	absDataPath, _ := filepath.Abs(dataPath)
 	absDigestFile := filepath.Join(absDataPath, chdiff.DefaultDigestName)
