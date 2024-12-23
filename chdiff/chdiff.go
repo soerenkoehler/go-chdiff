@@ -37,14 +37,17 @@ type CmdCreate struct {
 	Algorithm string `name:"algorithm" short:"a" help:"The checksum algorithm to use [SHA256,SHA512]." enum:"SHA256,SHA512" default:"SHA256"`
 }
 
-type CmdVerify struct{ cmdDigest }
+type CmdVerify struct {
+	cmdDigest
+	ShowIdentical bool `name:"show-identical" help:"Show identical files in the output."`
+}
 
 type ChdiffDependencies interface {
 	DigestRead(string, string) (digest.Digest, error)
 	DigestWrite(digest.Digest, string) error
 	DigestCalculate(string, digest.HashType) digest.Digest
 	DigestCompare(digest.Digest, digest.Digest) diff.Diff
-	DiffPrint(io.Writer, diff.Diff)
+	DiffPrint(io.Writer, diff.Diff, bool)
 	Stdout() io.Writer
 	Stderr() io.Writer
 	KongExit() func(int)
@@ -102,7 +105,8 @@ func (cmd *CmdVerify) Run(deps ChdiffDependencies) error {
 				oldDigest,
 				deps.DigestCalculate(
 					cmd.RootPath,
-					oldDigest.Algorithm)))
+					oldDigest.Algorithm)),
+			cmd.ShowIdentical)
 	}).ChainError("verify")
 
 	return chain.Err

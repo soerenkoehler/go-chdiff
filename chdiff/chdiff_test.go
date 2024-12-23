@@ -43,8 +43,8 @@ func (m *MockDependencies) DigestCompare(old, new digest.Digest) diff.Diff {
 	return m.Called(old, new).Get(0).(diff.Diff)
 }
 
-func (m *MockDependencies) DiffPrint(out io.Writer, d diff.Diff) {
-	m.Called(out, d)
+func (m *MockDependencies) DiffPrint(out io.Writer, d diff.Diff, si bool) {
+	m.Called(out, d, si)
 }
 
 func (m *MockDependencies) Stdout() io.Writer {
@@ -244,7 +244,7 @@ func testDigestVerify(
 		On("DigestRead", absDataPath, absDigestFile).Return(mockDigestLoaded, nil).
 		On("DigestCalculate", absDataPath, digest.SHA256).Return(mockDigestCalculated).
 		On("DigestCompare", mockDigestLoaded, mockDigestCalculated).Return(mockDiffResult).
-		On("DiffPrint", s.Stdout, mockDiffResult).Return()
+		On("DiffPrint", s.Stdout, mockDiffResult, mock.Anything).Return()
 
 	chdiff.Chdiff("TEST", args, s.Dependencies)
 

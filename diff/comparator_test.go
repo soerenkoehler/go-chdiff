@@ -41,53 +41,89 @@ func (s *TSComparator) SetupTest() {
 }
 
 func (s *TSComparator) TestOutputEmptyDiff() {
-	diff.Print(s.Stdout, makeDiff(s, 0, 0, 0, 0))
+	diff.Print(s.Stdout, makeDiff(0, 0, 0, 0), false)
 
 	expect(s, []string{}, 0, 0, 0, 0)
 }
 
 func (s *TSComparator) TestOutputNoChanges() {
-	diff.Print(s.Stdout, makeDiff(s, 2, 0, 0, 0))
+	diff.Print(s.Stdout, makeDiff(2, 0, 0, 0), false)
 
 	expect(s, []string{}, 2, 0, 0, 0)
 }
 
-func (s *TSComparator) TestOutputWithChanges() {
-	diff.Print(s.Stdout, makeDiff(s, 0, 3, 5, 7))
+func (s *TSComparator) TestOutputNoChangesShowIdentical() {
+	diff.Print(s.Stdout, makeDiff(2, 0, 0, 0), true)
 
 	expect(s, []string{
-		"* relPath0",
-		"* relPath1",
-		"- relPath10",
-		"- relPath11",
+		"= relPath0",
+		"= relPath1",
+	}, 2, 0, 0, 0)
+}
+
+func (s *TSComparator) TestOutputWithChanges() {
+	diff.Print(s.Stdout, makeDiff(4, 3, 5, 7), false)
+
+	expect(s, []string{
+		"+ relPath10",
+		"+ relPath11",
 		"- relPath12",
 		"- relPath13",
 		"- relPath14",
-		"* relPath2",
-		"+ relPath3",
-		"+ relPath4",
-		"+ relPath5",
-		"+ relPath6",
+		"- relPath15",
+		"- relPath16",
+		"- relPath17",
+		"- relPath18",
+		"M relPath4",
+		"M relPath5",
+		"M relPath6",
 		"+ relPath7",
-		"- relPath8",
-		"- relPath9",
-	}, 0, 3, 5, 7)
+		"+ relPath8",
+		"+ relPath9",
+	}, 4, 3, 5, 7)
+}
+
+func (s *TSComparator) TestOutputWithChangesShowIdentical() {
+	diff.Print(s.Stdout, makeDiff(4, 3, 5, 7), true)
+
+	expect(s, []string{
+		"= relPath0",
+		"= relPath1",
+		"+ relPath10",
+		"+ relPath11",
+		"- relPath12",
+		"- relPath13",
+		"- relPath14",
+		"- relPath15",
+		"- relPath16",
+		"- relPath17",
+		"- relPath18",
+		"= relPath2",
+		"= relPath3",
+		"M relPath4",
+		"M relPath5",
+		"M relPath6",
+		"+ relPath7",
+		"+ relPath8",
+		"+ relPath9",
+	}, 4, 3, 5, 7)
 }
 
 func (s *TSComparator) TestCompare() {
 	diff.Print(s.Stdout, diff.Compare(
 		makeDigest(s, digestPath1, digestFile1, digestTime1),
-		makeDigest(s, digestPath2, digestFile2, digestTime2)))
+		makeDigest(s, digestPath2, digestFile2, digestTime2)),
+		false)
 
 	expect(s,
 		[]string{
 			"- f0",
-			"* f2",
+			"M f2",
 			"+ f3",
 		}, 1, 1, 1, 1)
 }
 
-func makeDiff(s *TSComparator, identical, modified, added, removed int32) diff.Diff {
+func makeDiff(identical, modified, added, removed int32) diff.Diff {
 	result := diff.Diff{
 		LocationA: common.Location{
 			Path: digestPath1,

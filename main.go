@@ -30,8 +30,8 @@ func (*DefaultDependencies) DigestCompare(old, new digest.Digest) diff.Diff {
 	return diff.Compare(old, new)
 }
 
-func (*DefaultDependencies) DiffPrint(out io.Writer, d diff.Diff) {
-	diff.Print(out, d)
+func (*DefaultDependencies) DiffPrint(out io.Writer, d diff.Diff, si bool) {
+	diff.Print(out, d, si)
 }
 
 func (*DefaultDependencies) Stdout() io.Writer {

@@ -14,8 +14,8 @@ type Comparator func(digest.Digest, digest.Digest) Diff
 type DiffPrinter func(io.Writer, Diff)
 
 var statusIcon map[DiffStatus]string = map[DiffStatus]string{
-	Identical: " ",
-	Modified:  "*",
+	Identical: "=",
+	Modified:  "M",
 	Added:     "+",
 	Removed:   "-"}
 
@@ -52,7 +52,7 @@ func Compare(old, new digest.Digest) Diff {
 		Entries:   diffEntries}
 }
 
-func Print(out io.Writer, diff Diff) {
+func Print(out io.Writer, diff Diff, showIdentical bool) {
 	fmt.Fprintf(out,
 		"Old: (%s) %v\nNew: (%s) %v\n",
 		common.LocationTimeFormat.FormatString(diff.LocationA.Time),
@@ -64,7 +64,7 @@ func Print(out io.Writer, diff Diff) {
 
 	for _, v := range diff.sortedEntries() {
 		count[v.Status]++
-		if v.Status != Identical {
+		if v.Status != Identical || showIdentical {
 			fmt.Fprintf(out, "%s %v\n", statusIcon[v.Status], v.File)
 		}
 	}

@@ -1,3 +1,4 @@
+.chdiff.txt
 *.out
 coverage.*
 __debug_bin
